@@ -24,16 +24,22 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // CRITICAL: We MUST stay in loading state if the user session or the phrase ref is not yet established
-  if (isUserLoading || !user || isLoading || !phraseRef) {
+  // CRITICAL: We MUST stay in loading state if user auth OR data fetch is still active.
+  // We only proceed if isUserLoading and isLoading are both false.
+  if (isUserLoading || isLoading || !phraseRef) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
-        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <p className="text-sm font-bold text-primary/60 uppercase tracking-widest animate-pulse">
+            Magie en cours...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Only throw 404 if loading is truly complete and no data was returned
+  // If loading is complete but no phrase exists, THEN it's a 404
   if (!phrase) {
     return notFound();
   }

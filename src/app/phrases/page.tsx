@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -126,7 +125,7 @@ export default function PhrasesPage() {
                       <div className="bg-primary/10 h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0">
                          <MessageSquare className="h-6 w-6 text-primary" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold text-primary leading-tight">
                           {phrase.frenchText}
                         </h3>
@@ -153,7 +152,7 @@ export default function PhrasesPage() {
                   </div>
 
                   {/* Practicing tools directly on the card */}
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-muted/50">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-muted/50 items-start">
                     <div className="flex flex-col items-center gap-2">
                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Écoute</span>
                        <AudioPlayer text={phrase.frenchText} />

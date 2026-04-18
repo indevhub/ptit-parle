@@ -21,15 +21,21 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
+  // If word is not in the static list, it's a definitive 404
   if (!word) {
     return notFound();
   }
 
-  // CRITICAL: We MUST stay in loading state if the user session is not yet established
+  // CRITICAL: We MUST stay in loading state if auth session is still initializing
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
-        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <p className="text-sm font-bold text-primary/60 uppercase tracking-widest animate-pulse">
+            Préparation...
+          </p>
+        </div>
       </div>
     );
   }

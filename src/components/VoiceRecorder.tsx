@@ -37,14 +37,15 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       recognition.onresult = (event: any) => {
         setIsProcessing(true);
         try {
-          const transcript = event.results[0][0].transcript.toLowerCase();
-          const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
-          const cleanTranscript = transcript.replace(/[.,!?;:]/g, "").trim();
+          const transcript = event.results[0][0].transcript;
+          const transcriptLower = transcript.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+          const targetLower = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
 
-          const isMatch = target.length > 0 && (cleanTranscript.includes(target) || target.includes(cleanTranscript));
+          // Lenient matching for kids
+          const isMatch = targetLower.length > 0 && (transcriptLower.includes(targetLower) || targetLower.includes(transcriptLower));
           
           const result: SpeechFeedback = {
-            transcript: event.results[0][0].transcript,
+            transcript: transcript,
             isGoodPronunciation: isMatch,
             frFeedback: isMatch ? `Magnifique !` : `Essaie encore !`,
             enFeedback: isMatch ? `Great!` : `Try again!`
@@ -100,6 +101,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       recognitionRef.current.start();
       setIsRecording(true);
     } catch (e) {
+      console.warn('Recognition already started or failed to start:', e);
       setIsRecording(false);
     }
   };
@@ -134,7 +136,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       </div>
 
       {(isRecording || feedback || isProcessing) && (
-        <div className="text-center min-h-[1.5rem] animate-in fade-in slide-in-from-top-1">
+        <div className="text-center min-h-[2.5rem] animate-in fade-in slide-in-from-top-1 px-4">
           {isRecording && (
             <div className="text-[10px] font-bold text-destructive animate-pulse uppercase tracking-wider">
               On t'écoute...
@@ -146,11 +148,18 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
             </div>
           )}
           {feedback && (
-            <div className={`flex items-center gap-1 justify-center ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
-              {feedback.isGoodPronunciation ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
-              </span>
+            <div className="space-y-1">
+              <div className={`flex items-center gap-1 justify-center ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
+                {feedback.isGoodPronunciation ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                <span className="text-[10px] font-bold uppercase tracking-wider">
+                  <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
+                </span>
+              </div>
+              {feedback.transcript && (
+                <div className="text-[9px] text-muted-foreground italic font-medium leading-tight">
+                  <TranslatedText fr={`Tu as dit : "${feedback.transcript}"`} en={`You said: "${feedback.transcript}"`} inline />
+                </div>
+              )}
             </div>
           )}
         </div>
