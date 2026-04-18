@@ -24,7 +24,7 @@ export async function translatePhrase(input: { englishText: string }) {
 
   if (isPlaceholderKey) {
     console.warn('Genkit: No valid API key found. Using mock translation.');
-    // Simple mock translation for prototyping
+    // Friendly simulated translation for prototyping
     return {
       frenchText: `${input.englishText} (en français ✨)`,
       englishText: input.englishText
