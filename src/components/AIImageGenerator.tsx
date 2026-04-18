@@ -36,18 +36,19 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
       console.error('Image generation error:', err);
       
       const errorMessage = err.message || '';
-      const isAuthError = errorMessage.includes('API key') || errorMessage.includes('400');
-      const isRegionError = errorMessage.includes('region') || errorMessage.includes('403') || errorMessage.includes('PERMISSION_DENIED');
+      // Check for invalid key or specific error codes
+      const isAuthError = errorMessage.includes('API key') || errorMessage.includes('400') || errorMessage.includes('invalid');
       
-      // If AI is blocked by region or key, we use a high-quality fallback to keep the demo working
-      if (isAuthError || isRegionError) {
+      // If AI is blocked or key is invalid, use high-quality fallback (Picsum)
+      if (isAuthError) {
         setIsDemoMode(true);
-        const fallbackUrl = `https://picsum.photos/seed/${word}-${Math.floor(Math.random() * 1000)}/600/600`;
+        // Using picsum.photos with the word as a seed for consistent mock images
+        const fallbackUrl = `https://picsum.photos/seed/${word}/600/600`;
         setGeneratedUrl(fallbackUrl);
         
         toast({
-          title: isRegionError ? 'Région restreinte' : 'Clé API manquante',
-          description: "Gemini n'est pas disponible, j'utilise une image magique de secours !",
+          title: 'Mode Démo Activé',
+          description: "Vérifie ta clé API dans le fichier .env pour activer les vrais dessins !",
         });
       } else {
         setError('Échec de la génération');
