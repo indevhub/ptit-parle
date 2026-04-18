@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, ImageIcon } from 'lucide-react';
+import { Wand2, Loader2, ImageIcon, AlertCircle } from 'lucide-react';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import Image from 'next/image';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useToast } from '@/hooks/use-toast';
 
 interface AIImageGeneratorProps {
   word: string;
@@ -14,16 +15,32 @@ interface AIImageGeneratorProps {
 export function AIImageGenerator({ word }: AIImageGeneratorProps) {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const url = await generateWordImage({ word });
       if (url) {
         setGeneratedUrl(url);
+      } else {
+        throw new Error('No image returned');
       }
-    } catch (error) {
-      console.error('Failed to generate image:', error);
+    } catch (err: any) {
+      // Catching the API key error specifically to guide the user
+      const isAuthError = err.message?.includes('API key') || err.message?.includes('400');
+      setError(isAuthError ? 'Clé API invalide ou manquante' : 'Échec de la génération');
+      
+      toast({
+        variant: 'destructive',
+        title: 'Erreur Magique',
+        description: isAuthError 
+          ? 'Vérifie ta clé API dans le fichier .env !' 
+          : 'Désolé, le dessin magique n\'a pas fonctionné.',
+      });
+      console.error('Image generation error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -59,18 +76,27 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
           </Button>
         </div>
       ) : (
-        <Button
-          onClick={handleGenerate}
-          disabled={isLoading}
-          className="w-full h-16 rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 child-button text-lg font-bold"
-        >
-          {isLoading ? (
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          ) : (
-            <ImageIcon className="h-6 w-6 mr-2" />
+        <div className="w-full space-y-4">
+          <Button
+            onClick={handleGenerate}
+            disabled={isLoading}
+            className="w-full h-16 rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 child-button text-lg font-bold"
+          >
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            ) : (
+              <ImageIcon className="h-6 w-6 mr-2" />
+            )}
+            <TranslatedText fr="Générer l'Image" en="Generate Image" />
+          </Button>
+          
+          {error && (
+            <div className="flex items-center gap-2 text-destructive text-xs justify-center bg-destructive/10 p-2 rounded-xl animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}. Vérifie ton fichier .env !</span>
+            </div>
           )}
-          <TranslatedText fr="Générer l'Image" en="Generate Image" />
-        </Button>
+        </div>
       )}
     </div>
   );
