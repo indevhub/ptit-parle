@@ -28,10 +28,9 @@ export async function translatePhrase(input: { englishText: string }) {
   const isPlaceholderKey = !apiKey || apiKey === 'your_actual_api_key_here' || apiKey.length < 10;
 
   if (isPlaceholderKey) {
-    console.warn('Genkit: No valid API key found. Using mock translation for demo.');
-    // Simulated translation that looks "magical" for the demo
+    console.warn('Genkit: No valid API key found in GOOGLE_GENAI_API_KEY. Using mock translation.');
     return {
-      frenchText: `${input.englishText} ✨ (Traduction en cours...)`,
+      frenchText: `${input.englishText} ✨ [Mode Démo]`,
       englishText: input.englishText
     };
   }
@@ -56,11 +55,10 @@ export async function translatePhrase(input: { englishText: string }) {
     if (!output) throw new Error('Translation failed: No output from model');
     return output;
   } catch (error: any) {
-    // If the API key is rejected (400) or quota hit, don't crash the app
     console.error('Genkit Translation Error:', error.message);
     
     return {
-      frenchText: `${input.englishText} [Mode Démo]`,
+      frenchText: `${input.englishText} ✨ [Mode Démo]`,
       englishText: input.englishText
     };
   }
