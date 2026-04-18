@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TranslationProvider } from '@/context/TranslationContext';
 
 export const metadata: Metadata = {
   title: "P'tit Parlé - Apprends le français en t'amusant",
@@ -22,8 +23,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen bg-background">
         <TooltipProvider>
-          {children}
-          <Toaster />
+          <TranslationProvider>
+            {children}
+            <Toaster />
+          </TranslationProvider>
         </TooltipProvider>
       </body>
     </html>

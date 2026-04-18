@@ -4,15 +4,18 @@ import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Star, Trophy, Sparkles } from 'lucide-react';
+import { Star, Trophy, Sparkles, Languages } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useTranslation } from '@/context/TranslationContext';
 
 export default function DashboardPage() {
   const [progress] = useState({ stars: 12, total: VOCABULARY.length, learned: 3 });
+  const { showEnglish, toggleEnglish } = useTranslation();
 
   const getImageUrl = (id: string) => {
     return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
@@ -22,7 +25,7 @@ export default function DashboardPage() {
     <div className="pb-24 min-h-screen">
       <header className="p-6 md:p-10 bg-white card-shadow rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <h1 className="text-3xl font-bold text-primary mb-1 cursor-help">Salut, Explorateur ! 👋</h1>
@@ -36,9 +39,19 @@ export default function DashboardPage() {
               <TooltipContent>Ready for a new adventure?</TooltipContent>
             </Tooltip>
           </div>
-          <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-            <span className="font-bold text-primary text-xl">{progress.stars}</span>
+          <div className="flex items-center gap-3">
+             <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={toggleEnglish}
+                className={`rounded-full border-2 transition-all ${showEnglish ? 'bg-primary border-primary text-white' : 'border-muted text-muted-foreground'}`}
+              >
+                <Languages className="h-5 w-5" />
+              </Button>
+            <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+              <span className="font-bold text-primary text-xl">{progress.stars}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -95,12 +108,15 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4">
                       <p className="text-white text-xs font-bold uppercase tracking-widest mb-1">{word.english}</p>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <h3 className="text-white text-2xl font-bold cursor-help">{word.french}</h3>
-                        </TooltipTrigger>
-                        <TooltipContent>{word.english}</TooltipContent>
-                      </Tooltip>
+                      <div className="flex flex-col">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <h3 className="text-white text-2xl font-bold cursor-help">{word.french}</h3>
+                          </TooltipTrigger>
+                          <TooltipContent>{word.english}</TooltipContent>
+                        </Tooltip>
+                        {showEnglish && <p className="text-white/80 text-sm font-medium">{word.english}</p>}
+                      </div>
                     </div>
                   </div>
                 </Card>

@@ -11,10 +11,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { notFound } from 'next/navigation';
+import { useTranslation } from '@/context/TranslationContext';
 
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
+  const { showEnglish } = useTranslation();
 
   if (!word) {
     return notFound();
@@ -60,6 +62,11 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
                  </TooltipTrigger>
                  <TooltipContent>{word.english}</TooltipContent>
                </Tooltip>
+               {showEnglish && (
+                 <p className="text-white/90 text-2xl font-bold mt-2 animate-in fade-in slide-in-from-bottom-2">
+                   {word.english}
+                 </p>
+               )}
             </div>
           </div>
 

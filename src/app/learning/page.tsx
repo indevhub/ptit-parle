@@ -10,8 +10,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from '@/context/TranslationContext';
 
 export default function LearningListPage() {
+  const { showEnglish } = useTranslation();
+
   const getImageUrl = (id: string) => {
     return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
   };
@@ -57,7 +60,11 @@ export default function LearningListPage() {
                     </TooltipTrigger>
                     <TooltipContent>{word.english}</TooltipContent>
                   </Tooltip>
-                  <p className="text-xs text-muted-foreground font-medium uppercase">{word.english}</p>
+                  {showEnglish ? (
+                    <p className="text-sm font-bold text-accent mt-1">{word.english}</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground font-medium uppercase">{word.english}</p>
+                  )}
                 </CardContent>
               </Card>
             </Link>
