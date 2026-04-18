@@ -26,8 +26,8 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
     return notFound();
   }
 
-  // Robust loading check: Wait for user session
-  if (isUserLoading || (user === null)) {
+  // Robust loading check: Wait for user session and auth initialization
+  if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
