@@ -1,9 +1,9 @@
+
 "use client"
 
-import React, { useState, useRef } from 'react';
-import { Mic, Square, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mic, Square, Loader2, CheckCircle2, XCircle, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { pronunciationFeedback, PronunciationFeedbackOutput } from '@/ai/flows/pronunciation-feedback';
 import { useToast } from '@/hooks/use-toast';
 
 interface VoiceRecorderProps {
@@ -11,74 +11,97 @@ interface VoiceRecorderProps {
   onSuccess?: () => void;
 }
 
+interface SpeechFeedback {
+  feedback: string;
+  isGoodPronunciation: boolean;
+  transcript: string;
+}
+
 export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [feedback, setFeedback] = useState<PronunciationFeedbackOutput | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const [feedback, setFeedback] = useState<SpeechFeedback | null>(null);
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+  useEffect(() => {
+    // Initialize Web Speech API
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'fr-FR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "");
+        const cleanTranscript = transcript.replace(/[.,!?;:]/g, "");
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result as string;
-          await handleProcess(base64Audio);
+        const isMatch = cleanTranscript.includes(target) || target.includes(cleanTranscript);
+        
+        const result: SpeechFeedback = {
+          transcript: event.results[0][0].transcript,
+          isGoodPronunciation: isMatch,
+          feedback: isMatch 
+            ? `Excellent ! Tu as dit : "${event.results[0][0].transcript}"` 
+            : `Pas tout à fait. J'ai entendu : "${event.results[0][0].transcript}". Essaie encore !`
         };
+
+        setFeedback(result);
+        if (isMatch) {
+          onSuccess?.();
+        }
+        setIsProcessing(false);
+        setIsRecording(false);
       };
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      setFeedback(null);
-    } catch (err) {
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsProcessing(false);
+        setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          toast({
+            title: "Micro bloqué",
+            description: "Merci d'autoriser l'accès au micro dans votre navigateur.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, [targetPhrase, onSuccess, toast]);
+
+  const startRecording = () => {
+    if (!recognitionRef.current) {
       toast({
-        title: "Erreur de micro",
-        description: "Nous n'avons pas pu accéder à votre micro.",
+        title: "Navigateur non compatible",
+        description: "Votre navigateur ne supporte pas la reconnaissance vocale.",
         variant: "destructive",
       });
+      return;
+    }
+
+    setFeedback(null);
+    setIsRecording(true);
+    setIsProcessing(false);
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      // Recognition might already be started
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-    }
-  };
-
-  const handleProcess = async (audioDataUri: string) => {
-    setIsProcessing(true);
-    try {
-      const result = await pronunciationFeedback({
-        recordedAudioDataUri: audioDataUri,
-        targetPhrase: targetPhrase,
-      });
-      setFeedback(result);
-      if (result.isGoodPronunciation) {
-        onSuccess?.();
-      }
-    } catch (error) {
-      toast({
-        title: "Désolé !",
-        description: "Une erreur est survenue lors de l'analyse.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsProcessing(true);
     }
   };
 
@@ -105,10 +128,17 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
         )}
       </div>
 
-      {isRecording && <p className="text-sm font-medium text-destructive animate-bounce">On t'écoute...</p>}
+      {isRecording && (
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-sm font-bold text-destructive animate-bounce">On t'écoute...</p>
+          <p className="text-xs text-muted-foreground italic">Dis "{targetPhrase}"</p>
+        </div>
+      )}
+
+      {isProcessing && <p className="text-sm font-medium text-primary">Analyse en cours...</p>}
 
       {feedback && (
-        <div className={`flex flex-col items-center text-center p-4 rounded-2xl w-full ${feedback.isGoodPronunciation ? 'bg-green-100' : 'bg-orange-100'}`}>
+        <div className={`flex flex-col items-center text-center p-4 rounded-2xl w-full animate-in fade-in zoom-in duration-300 ${feedback.isGoodPronunciation ? 'bg-green-100' : 'bg-orange-100'}`}>
           <div className="flex items-center gap-2 mb-2">
             {feedback.isGoodPronunciation ? (
               <CheckCircle2 className="h-6 w-6 text-green-600" />
@@ -119,7 +149,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
               {feedback.isGoodPronunciation ? 'Bravo !' : 'Encore un petit effort'}
             </span>
           </div>
-          <p className="text-sm text-foreground/80">{feedback.feedback}</p>
+          <p className="text-sm text-foreground/80 mb-1">{feedback.feedback}</p>
         </div>
       )}
     </div>
