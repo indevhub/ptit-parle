@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, ImageIcon, AlertCircle } from 'lucide-react';
+import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles } from 'lucide-react';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import Image from 'next/image';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -16,11 +17,14 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     setIsLoading(true);
     setError(null);
+    setIsDemoMode(false);
+    
     try {
       const url = await generateWordImage({ word });
       if (url) {
@@ -29,25 +33,37 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
         throw new Error('No image returned');
       }
     } catch (err: any) {
-      // Catching the API key error specifically to guide the user
-      const isAuthError = err.message?.includes('API key') || err.message?.includes('400');
-      setError(isAuthError ? 'Clé API invalide ou manquante' : 'Échec de la génération');
-      
-      toast({
-        variant: 'destructive',
-        title: 'Erreur Magique',
-        description: isAuthError 
-          ? 'Vérifie ta clé API dans le fichier .env !' 
-          : 'Désolé, le dessin magique n\'a pas fonctionné.',
-      });
       console.error('Image generation error:', err);
+      
+      const errorMessage = err.message || '';
+      const isAuthError = errorMessage.includes('API key') || errorMessage.includes('400');
+      const isRegionError = errorMessage.includes('region') || errorMessage.includes('403') || errorMessage.includes('PERMISSION_DENIED');
+      
+      // If AI is blocked by region or key, we use a high-quality fallback to keep the demo working
+      if (isAuthError || isRegionError) {
+        setIsDemoMode(true);
+        const fallbackUrl = `https://picsum.photos/seed/${word}-${Math.floor(Math.random() * 1000)}/600/600`;
+        setGeneratedUrl(fallbackUrl);
+        
+        toast({
+          title: isRegionError ? 'Région restreinte' : 'Clé API manquante',
+          description: "Gemini n'est pas disponible, j'utilise une image magique de secours !",
+        });
+      } else {
+        setError('Échec de la génération');
+        toast({
+          variant: 'destructive',
+          title: 'Erreur Magique',
+          description: 'Désolé, le dessin magique n\'a pas fonctionné.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-4 p-6 bg-white/80 rounded-[2rem] card-shadow">
+    <div className="w-full flex flex-col items-center gap-4 p-6 bg-white/80 rounded-[2rem] card-shadow border-2 border-dashed border-accent/20">
       <div className="flex flex-col items-center text-center gap-2 mb-2">
         <h3 className="font-bold text-primary flex items-center gap-2">
           <Wand2 className="h-5 w-5 text-accent" />
@@ -59,18 +75,27 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
       </div>
 
       {generatedUrl ? (
-        <div className="relative aspect-square w-full rounded-2xl overflow-hidden animate-in zoom-in duration-500">
+        <div className="relative aspect-square w-full rounded-2xl overflow-hidden animate-in zoom-in duration-500 ring-4 ring-accent/10">
           <Image
             src={generatedUrl}
-            alt={`AI illustration of ${word}`}
+            alt={`Illustration of ${word}`}
             fill
             className="object-cover"
           />
+          {isDemoMode && (
+            <div className="absolute top-2 left-2 bg-accent/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+              <Sparkles className="h-3 w-3" />
+              MODE DÉMO
+            </div>
+          )}
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => setGeneratedUrl(null)}
-            className="absolute bottom-2 right-2 rounded-full bg-white/90 backdrop-blur-sm"
+            onClick={() => {
+              setGeneratedUrl(null);
+              setIsDemoMode(false);
+            }}
+            className="absolute bottom-2 right-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md"
           >
             <TranslatedText fr="Effacer" en="Clear" />
           </Button>
@@ -80,7 +105,7 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
           <Button
             onClick={handleGenerate}
             disabled={isLoading}
-            className="w-full h-16 rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 child-button text-lg font-bold"
+            className="w-full h-16 rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 child-button text-lg font-bold shadow-lg"
           >
             {isLoading ? (
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -93,7 +118,7 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
           {error && (
             <div className="flex items-center gap-2 text-destructive text-xs justify-center bg-destructive/10 p-2 rounded-xl animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="h-4 w-4" />
-              <span>{error}. Vérifie ton fichier .env !</span>
+              <span>{error}</span>
             </div>
           )}
         </div>
