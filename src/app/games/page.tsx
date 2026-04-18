@@ -2,14 +2,16 @@
 
 import React from 'react';
 import { Navigation } from '@/components/Navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Gamepad2, Headphones, Sparkles, Trophy } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from 'next/link';
 
 export default function GamesMenuPage() {
   const games = [
     {
       title: "Écoute Magique",
+      translation: "Magic Listening",
       description: "Écoute le mot et trouve la bonne image.",
       icon: Headphones,
       color: "bg-primary",
@@ -18,6 +20,7 @@ export default function GamesMenuPage() {
     },
     {
       title: "Mots Mystères",
+      translation: "Mystery Words",
       description: "Devine le mot à partir de l'image.",
       icon: Gamepad2,
       color: "bg-accent",
@@ -27,6 +30,7 @@ export default function GamesMenuPage() {
     },
     {
       title: "Course aux Étoiles",
+      translation: "Star Race",
       description: "Apprends le plus de mots possible en 1 minute !",
       icon: Trophy,
       color: "bg-yellow-500",
@@ -40,11 +44,21 @@ export default function GamesMenuPage() {
     <div className="pb-24 min-h-screen">
       <header className="p-10 bg-white card-shadow rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto">
-          <h1 className="text-3xl font-bold text-primary mb-2 flex items-center gap-3">
-             <Gamepad2 className="h-8 w-8" />
-             Salle de Jeux
-          </h1>
-          <p className="text-muted-foreground font-medium">Amuse-toi tout en apprenant le français !</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h1 className="text-3xl font-bold text-primary mb-2 flex items-center gap-3 cursor-help">
+                 <Gamepad2 className="h-8 w-8" />
+                 Salle de Jeux
+              </h1>
+            </TooltipTrigger>
+            <TooltipContent>Games Room</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-muted-foreground font-medium cursor-help">Amuse-toi tout en apprenant le français !</p>
+            </TooltipTrigger>
+            <TooltipContent>Have fun while learning French!</TooltipContent>
+          </Tooltip>
         </div>
       </header>
 
@@ -58,7 +72,12 @@ export default function GamesMenuPage() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-xl font-bold text-foreground">{game.title}</h3>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <h3 className="text-xl font-bold text-foreground cursor-help">{game.title}</h3>
+                      </TooltipTrigger>
+                      <TooltipContent>{game.translation}</TooltipContent>
+                    </Tooltip>
                     <span className="text-[10px] font-bold uppercase tracking-widest bg-muted px-2 py-1 rounded-full">{game.level}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">{game.description}</p>

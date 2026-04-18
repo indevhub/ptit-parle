@@ -1,17 +1,18 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Star, Trophy, Sparkles } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function DashboardPage() {
-  const [progress, setProgress] = useState({ stars: 12, total: VOCABULARY.length, learned: 3 });
+  const [progress] = useState({ stars: 12, total: VOCABULARY.length, learned: 3 });
 
   const getImageUrl = (id: string) => {
     return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
@@ -22,8 +23,18 @@ export default function DashboardPage() {
       <header className="p-6 md:p-10 bg-white card-shadow rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-1">Salut, Explorateur ! 👋</h1>
-            <p className="text-muted-foreground font-medium">Prêt pour une nouvelle aventure ?</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h1 className="text-3xl font-bold text-primary mb-1 cursor-help">Salut, Explorateur ! 👋</h1>
+              </TooltipTrigger>
+              <TooltipContent>Hi, Explorer!</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-muted-foreground font-medium cursor-help">Prêt pour une nouvelle aventure ?</p>
+              </TooltipTrigger>
+              <TooltipContent>Ready for a new adventure?</TooltipContent>
+            </Tooltip>
           </div>
           <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2">
             <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -35,10 +46,15 @@ export default function DashboardPage() {
       <main className="max-w-screen-md mx-auto p-6 space-y-8">
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-accent" />
-              Ton Progrès
-            </h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h2 className="text-xl font-bold flex items-center gap-2 cursor-help">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                  Ton Progrès
+                </h2>
+              </TooltipTrigger>
+              <TooltipContent>Your Progress</TooltipContent>
+            </Tooltip>
             <span className="text-sm font-bold text-muted-foreground">{progress.learned}/{progress.total} mots</span>
           </div>
           <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden">
@@ -58,7 +74,12 @@ export default function DashboardPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-bold mb-4">Continuer l'Apprentissage</h2>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h2 className="text-xl font-bold mb-4 cursor-help">Continuer l'Apprentissage</h2>
+            </TooltipTrigger>
+            <TooltipContent>Continue Learning</TooltipContent>
+          </Tooltip>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {VOCABULARY.slice(3, 5).map((word) => (
               <Link key={word.id} href={`/learning/${word.id}`}>
@@ -74,7 +95,12 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4">
                       <p className="text-white text-xs font-bold uppercase tracking-widest mb-1">{word.english}</p>
-                      <h3 className="text-white text-2xl font-bold">{word.french}</h3>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <h3 className="text-white text-2xl font-bold cursor-help">{word.french}</h3>
+                        </TooltipTrigger>
+                        <TooltipContent>{word.english}</TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 </Card>
@@ -84,15 +110,22 @@ export default function DashboardPage() {
         </section>
 
         <section>
-          <div className="bg-accent/10 p-6 rounded-[2rem] flex items-center gap-6">
-            <div className="bg-accent h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0">
-               <Trophy className="h-10 w-10 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-accent">Défi du jour !</h3>
-              <p className="text-sm text-foreground/70">Apprends 3 nouveaux mots aujourd'hui pour gagner un badge spécial.</p>
-            </div>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="bg-accent/10 p-6 rounded-[2rem] flex items-center gap-6 cursor-help">
+                <div className="bg-accent h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0">
+                   <Trophy className="h-10 w-10 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-accent">Défi du jour !</h3>
+                  <p className="text-sm text-foreground/70">Apprends 3 nouveaux mots aujourd'hui pour gagner un badge spécial.</p>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-center">
+              Daily Challenge! Learn 3 new words today to earn a special badge.
+            </TooltipContent>
+          </Tooltip>
         </section>
       </main>
 

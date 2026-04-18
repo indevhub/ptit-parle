@@ -5,6 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { ACHIEVEMENTS } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Star, Lock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AchievementsPage() {
   // Mock earned status
@@ -17,8 +18,18 @@ export default function AchievementsPage() {
           <div className="bg-yellow-500/10 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-4">
             <Trophy className="h-12 w-12 text-yellow-600" />
           </div>
-          <h1 className="text-3xl font-bold text-primary mb-2">Tes Médailles</h1>
-          <p className="text-muted-foreground font-medium">Collectionne-les toutes !</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h1 className="text-3xl font-bold text-primary mb-2 cursor-help">Tes Médailles</h1>
+            </TooltipTrigger>
+            <TooltipContent>Your Medals</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="text-muted-foreground font-medium cursor-help">Collectionne-les toutes !</p>
+            </TooltipTrigger>
+            <TooltipContent>Collect them all!</TooltipContent>
+          </Tooltip>
         </div>
       </header>
 
@@ -46,21 +57,41 @@ export default function AchievementsPage() {
         </div>
 
         <section className="bg-white p-8 rounded-[2rem] card-shadow text-center">
-           <h3 className="font-bold text-primary mb-4">Statistiques</h3>
+           <Tooltip>
+             <TooltipTrigger asChild>
+               <h3 className="font-bold text-primary mb-4 cursor-help">Statistiques</h3>
+             </TooltipTrigger>
+             <TooltipContent>Statistics</TooltipContent>
+           </Tooltip>
            <div className="flex justify-around">
              <div>
                <p className="text-3xl font-bold text-primary">1</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">Médailles</p>
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <p className="text-xs text-muted-foreground uppercase font-bold cursor-help">Médailles</p>
+                 </TooltipTrigger>
+                 <TooltipContent>Medals</TooltipContent>
+               </Tooltip>
              </div>
              <div className="w-px bg-border" />
              <div>
                <p className="text-3xl font-bold text-primary">12</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">Étoiles</p>
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <p className="text-xs text-muted-foreground uppercase font-bold cursor-help">Étoiles</p>
+                 </TooltipTrigger>
+                 <TooltipContent>Stars</TooltipContent>
+               </Tooltip>
              </div>
              <div className="w-px bg-border" />
              <div>
                <p className="text-3xl font-bold text-primary">3</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">Mots</p>
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <p className="text-xs text-muted-foreground uppercase font-bold cursor-help">Mots</p>
+                 </TooltipTrigger>
+                 <TooltipContent>Words</TooltipContent>
+               </Tooltip>
              </div>
            </div>
         </section>

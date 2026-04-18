@@ -5,6 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Search } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -19,10 +20,15 @@ export default function LearningListPage() {
     <div className="pb-24 min-h-screen">
       <header className="p-10 bg-white card-shadow rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto">
-          <h1 className="text-3xl font-bold text-primary mb-4 flex items-center gap-3">
-             <BookOpen className="h-8 w-8" />
-             Tes Mots
-          </h1>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h1 className="text-3xl font-bold text-primary mb-4 flex items-center gap-3 cursor-help">
+                 <BookOpen className="h-8 w-8" />
+                 Tes Mots
+              </h1>
+            </TooltipTrigger>
+            <TooltipContent>Your Words</TooltipContent>
+          </Tooltip>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input className="pl-10 h-12 rounded-2xl bg-muted border-none" placeholder="Chercher un mot..." />
@@ -45,7 +51,12 @@ export default function LearningListPage() {
                   />
                 </div>
                 <CardContent className="p-4 text-center">
-                  <h3 className="font-bold text-lg text-primary">{word.french}</h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <h3 className="font-bold text-lg text-primary cursor-help">{word.french}</h3>
+                    </TooltipTrigger>
+                    <TooltipContent>{word.english}</TooltipContent>
+                  </Tooltip>
                   <p className="text-xs text-muted-foreground font-medium uppercase">{word.english}</p>
                 </CardContent>
               </Card>
