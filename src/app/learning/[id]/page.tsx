@@ -6,7 +6,7 @@ import { Navigation } from '@/components/Navigation';
 import { VOCABULARY } from '@/app/data/lessons';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { ChevronLeft, Info, Star } from 'lucide-react';
+import { ChevronLeft, Info, Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -19,11 +19,20 @@ import { updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/no
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   if (!word) {
     return notFound();
+  }
+
+  // Robust loading check: Wait for user session
+  if (isUserLoading || (user === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
+        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+      </div>
+    );
   }
 
   const handlePronunciationSuccess = () => {
@@ -81,6 +90,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
               alt={word.french}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, 600px"
               data-ai-hint={imgData.hint}
               priority
             />

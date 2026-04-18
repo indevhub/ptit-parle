@@ -120,7 +120,7 @@ export default function PhrasesPage() {
           <div className="grid grid-cols-1 gap-6">
             {phrases.map((phrase) => (
               <Card key={phrase.id} className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden relative group">
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-6 space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div className="bg-primary/10 h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -152,7 +152,8 @@ export default function PhrasesPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-muted/50">
+                  {/* Practicing tools directly on the card */}
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-muted/50">
                     <div className="flex flex-col items-center gap-2">
                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Écoute</span>
                        <AudioPlayer text={phrase.frenchText} />

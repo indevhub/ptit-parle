@@ -25,8 +25,9 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // If we are still loading authentication or document data, show a loader
-  if (isUserLoading || isLoading) {
+  // Robust loading check: Wait for user and then for phrase data
+  // We don't 404 if user is null because anonymous sign-in is expected
+  if (isUserLoading || (user === null) || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -34,8 +35,8 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // Once loading is finished, if we still have no user or no phrase, THEN show 404
-  if (!user || !phrase) {
+  // If we have a user and loading finished, but phrase is missing, then 404
+  if (!phrase) {
     return notFound();
   }
 
