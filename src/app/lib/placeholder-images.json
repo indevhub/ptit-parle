@@ -1,0 +1,58 @@
+{
+  "placeholderImages": [
+    {
+      "id": "apple",
+      "description": "A fresh red apple",
+      "imageUrl": "https://picsum.photos/seed/apple/400/300",
+      "imageHint": "red apple"
+    },
+    {
+      "id": "dog",
+      "description": "A happy golden retriever dog",
+      "imageUrl": "https://picsum.photos/seed/dog/400/300",
+      "imageHint": "happy dog"
+    },
+    {
+      "id": "cat",
+      "description": "A cute ginger cat",
+      "imageUrl": "https://picsum.photos/seed/cat/400/300",
+      "imageHint": "cute cat"
+    },
+    {
+      "id": "sun",
+      "description": "A bright shining sun",
+      "imageUrl": "https://picsum.photos/seed/sun/400/300",
+      "imageHint": "bright sun"
+    },
+    {
+      "id": "water",
+      "description": "A glass of clear water",
+      "imageUrl": "https://picsum.photos/seed/water/400/300",
+      "imageHint": "glass water"
+    },
+    {
+      "id": "bread",
+      "description": "A fresh french baguette",
+      "imageUrl": "https://picsum.photos/seed/bread/400/300",
+      "imageHint": "french baguette"
+    },
+    {
+      "id": "book",
+      "description": "An open colorful book",
+      "imageUrl": "https://picsum.photos/seed/book/400/300",
+      "imageHint": "open book"
+    },
+    {
+      "id": "school",
+      "description": "A friendly looking school building",
+      "imageUrl": "https://picsum.photos/seed/school/400/300",
+      "imageHint": "school building"
+    },
+    {
+      "id": "hero",
+      "description": "Kids learning playfully",
+      "imageUrl": "https://picsum.photos/seed/kids/1200/800",
+      "imageHint": "kids learning"
+    }
+  ]
+}
