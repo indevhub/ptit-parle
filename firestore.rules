@@ -1,0 +1,170 @@
+/**
+ * P'tit Parlé Firestore Security Rules
+ *
+ * Core Philosophy:
+ * This ruleset implements a dual-layered security model. User-specific data (learner profiles, 
+ * progress, and sessions) follows a strict Parent-Ownership model where access is gated 
+ * by the parent's Firebase UID. Static educational content (lessons, vocabulary, achievements) 
+ * follows a Public Read / Admin Write model.
+ *
+ * Data Structure:
+ * 1. /users/{userId}/... : Private user tree where {userId} is the parent's UID.
+ * 2. /lessons/... : Publicly readable curriculum data.
+ * 3. /achievements/... : Publicly readable badge definitions.
+ * 4. /roles_admin/... : Administrative role definitions used for Database-Based Access Control (DBAC).
+ *
+ * Key Security Decisions:
+ * - Authorization Independence: We use hierarchical paths (/users/{userId}) to ensure fast, 
+ *   non-recursive permission checks.
+ * - Relational Integrity: On creation of learner-specific records, we validate that 
+ *   denormalized fields (like learnerId) match the resource's path to prevent data cross-talk.
+ * - DBAC for Administration: Admin privileges are determined by the existence of a document 
+ *   in the /roles_admin collection, allowing for flexible role management without custom claims.
+ * - Prototyping Flexibility: While authorization is strictly enforced based on ownership 
+ *   and roles, data schema validation is omitted to allow for rapid frontend iteration.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Global Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the user is an owner and the document exists (for updates/deletes). */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /** @description Checks if the authenticated user has administrative privileges. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Administrative roles. Existence of a UID here grants admin rights.
+     * @path /roles_admin/{adminId}
+     * @allow (get) if isSignedIn()
+     * @deny (write) if true
+     * @principle DBAC: Existence implies role.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Static lesson content.
+     * @path /lessons/{lessonId}
+     * @allow (get, list) if true
+     * @allow (create) if isAdmin()
+     * @principle Public read for app content, admin-only writes.
+     */
+    match /lessons/{lessonId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+
+      /**
+       * @description Static vocabulary items within a lesson.
+       * @path /lessons/{lessonId}/vocabularyItems/{vocabularyItemId}
+       * @allow (get, list) if true
+       * @allow (create) if isAdmin()
+       * @principle Inherited public read and admin write from parent.
+       */
+      match /vocabularyItems/{vocabularyItemId} {
+        allow get, list: if true;
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    /**
+     * @description Static achievement definitions.
+     * @path /achievements/{achievementId}
+     * @allow (get, list) if true
+     * @allow (create) if isAdmin()
+     * @principle Public read for app content, admin-only writes.
+     */
+    match /achievements/{achievementId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Learner profiles owned by a parent.
+     * @path /users/{userId}/learnerProfiles/{learnerProfileId}
+     * @allow (create) auth.uid == userId && data.id == learnerProfileId
+     * @deny (create) auth.uid != userId
+     * @principle Enforces path-based ownership and internal ID consistency.
+     */
+    match /users/{userId}/learnerProfiles/{learnerProfileId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == learnerProfileId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Tracking progress for a specific learner in a lesson.
+       * @path /users/{userId}/learnerProfiles/{learnerProfileId}/lessonProgresses/{lessonId}
+       * @allow (create) auth.uid == userId && data.learnerId == learnerProfileId
+       * @principle Validates denormalized learnerId against parent path.
+       */
+      match /lessonProgresses/{lessonId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.learnerId == learnerProfileId;
+        allow update: if isExistingOwner(userId) && request.resource.data.learnerId == resource.data.learnerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Tracking progress for a specific vocabulary item.
+       * @path /users/{userId}/learnerProfiles/{learnerProfileId}/vocabularyProgresses/{vocabularyItemId}
+       * @allow (get) auth.uid == userId
+       * @principle Ownership-based access to learner-specific sub-data.
+       */
+      match /vocabularyProgresses/{vocabularyItemId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.learnerId == learnerProfileId;
+        allow update: if isExistingOwner(userId) && request.resource.data.learnerId == resource.data.learnerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description History of game sessions for a learner.
+       * @path /users/{userId}/learnerProfiles/{learnerProfileId}/gameSessions/{gameSessionId}
+       * @allow (list) auth.uid == userId
+       * @principle Restricts listing of private game history to the owner.
+       */
+      match /gameSessions/{gameSessionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.learnerId == learnerProfileId;
+        allow update: if isExistingOwner(userId) && request.resource.data.learnerId == resource.data.learnerId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Record of achievements earned by a specific learner.
+       * @path /users/{userId}/learnerProfiles/{learnerProfileId}/achievements/{achievementId}
+       * @allow (create) isOwner(userId) && data.learnerId == learnerProfileId
+       * @principle Ensures earned achievements are correctly linked to the profile in the path.
+       */
+      match /achievements/{achievementId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.learnerId == learnerProfileId;
+        allow update: if isExistingOwner(userId) && request.resource.data.learnerId == resource.data.learnerId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
