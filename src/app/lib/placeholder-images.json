@@ -20,7 +20,7 @@
       "imageHint": "cute cat"
     },
     {
-      "id": "nature",
+      "id": "sun",
       "description": "Le soleil qui brille",
       "imageUrl": "https://picsum.photos/seed/sun101/600/600",
       "imageHint": "bright sun"

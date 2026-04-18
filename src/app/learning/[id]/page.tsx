@@ -31,13 +31,11 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
       const profileId = 'main-learner';
       const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
       
-      // Award a star for successful pronunciation
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(1),
         lastActiveAt: new Date().toISOString(),
       });
 
-      // Also track mastery for this specific word
       const vocabProgressRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
       setDocumentNonBlocking(vocabProgressRef, {
         learnerId: profileId,
@@ -51,9 +49,15 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const getImageUrl = (imgId: string) => {
-    return PlaceHolderImages.find(img => img.id === imgId)?.imageUrl || 'https://picsum.photos/seed/default/600/600';
+  const getPlaceholderData = (imgId: string) => {
+    const placeholder = PlaceHolderImages.find(img => img.id === imgId);
+    return {
+      url: placeholder?.imageUrl || `https://picsum.photos/seed/${imgId}/600/600`,
+      hint: placeholder?.imageHint || imgId
+    };
   };
+
+  const imgData = getPlaceholderData(word.imageId);
 
   return (
     <div className="pb-24 min-h-screen bg-[#FDF6F8]">
@@ -73,11 +77,11 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
         <main className="flex-1 space-y-8">
           <div className="relative aspect-square w-full rounded-[3rem] overflow-hidden card-shadow bg-white">
             <Image
-              src={getImageUrl(word.imageId)}
+              src={imgData.url}
               alt={word.french}
               fill
               className="object-cover"
-              data-ai-hint={word.english}
+              data-ai-hint={imgData.hint}
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

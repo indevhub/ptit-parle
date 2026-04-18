@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -12,8 +13,12 @@ import { Input } from '@/components/ui/input';
 import { TranslatedText } from '@/components/TranslatedText';
 
 export default function LearningListPage() {
-  const getImageUrl = (id: string) => {
-    return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
+  const getPlaceholderData = (id: string) => {
+    const placeholder = PlaceHolderImages.find(img => img.id === id);
+    return {
+      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
+      hint: placeholder?.imageHint || id
+    };
   };
 
   return (
@@ -33,26 +38,29 @@ export default function LearningListPage() {
 
       <main className="max-w-screen-md mx-auto p-6">
         <div className="grid grid-cols-2 gap-4">
-          {VOCABULARY.map((word) => (
-            <Link key={word.id} href={`/learning/${word.id}`}>
-              <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer">
-                <div className="relative h-32 w-full">
-                  <Image
-                    src={getImageUrl(word.imageId)}
-                    alt={word.english}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={word.english}
-                  />
-                </div>
-                <CardContent className="p-4 text-center">
-                  <h3 className="font-bold text-lg text-primary">
-                    <TranslatedText fr={word.french} en={word.english} />
-                  </h3>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {VOCABULARY.map((word) => {
+            const imgData = getPlaceholderData(word.imageId);
+            return (
+              <Link key={word.id} href={`/learning/${word.id}`}>
+                <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer">
+                  <div className="relative h-32 w-full">
+                    <Image
+                      src={imgData.url}
+                      alt={word.english}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={imgData.hint}
+                    />
+                  </div>
+                  <CardContent className="p-4 text-center">
+                    <h3 className="font-bold text-lg text-primary">
+                      <TranslatedText fr={word.french} en={word.english} />
+                    </h3>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       </main>
 

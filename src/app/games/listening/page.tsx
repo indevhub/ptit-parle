@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -53,8 +54,12 @@ export default function ListeningGamePage() {
     }
   };
 
-  const getImageUrl = (id: string) => {
-    return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
+  const getPlaceholderData = (id: string) => {
+    const placeholder = PlaceHolderImages.find(img => img.id === id);
+    return {
+      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
+      hint: placeholder?.imageHint || id
+    };
   };
 
   if (gameState === 'won') {
@@ -103,20 +108,24 @@ export default function ListeningGamePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {options.map((word) => (
-              <Card
-                key={word.id}
-                onClick={() => handleSelect(word.id)}
-                className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group h-48 relative"
-              >
-                <Image
-                  src={getImageUrl(word.imageId)}
-                  alt={word.english}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform"
-                />
-              </Card>
-            ))}
+            {options.map((word) => {
+              const imgData = getPlaceholderData(word.imageId);
+              return (
+                <Card
+                  key={word.id}
+                  onClick={() => handleSelect(word.id)}
+                  className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group h-48 relative"
+                >
+                  <Image
+                    src={imgData.url}
+                    alt={word.english}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    data-ai-hint={imgData.hint}
+                  />
+                </Card>
+              );
+            })}
           </div>
         </main>
       </div>

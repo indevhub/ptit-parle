@@ -53,13 +53,12 @@ export default function DashboardPage() {
   const activeProfile = profiles?.[0];
   const learnedCount = 3; 
 
-  const getImageUrl = (id: string) => {
+  const getPlaceholderData = (id: string) => {
     const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`;
-  };
-
-  const getImageHint = (id: string) => {
-    return PlaceHolderImages.find(img => img.id === id)?.imageHint || id;
+    return {
+      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
+      hint: placeholder?.imageHint || id
+    };
   };
 
   if (isUserLoading || isProfilesLoading) {
@@ -122,27 +121,30 @@ export default function DashboardPage() {
             <TranslatedText fr="Continuer l'Apprentissage" en="Continue Learning" />
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {VOCABULARY.slice(3, 5).map((word) => (
-              <Link key={word.id} href={`/learning/${word.id}`}>
-                <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group">
-                  <div className="relative h-40 w-full">
-                    <Image
-                      src={getImageUrl(word.imageId)}
-                      alt={word.english}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      data-ai-hint={getImageHint(word.imageId)}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4">
-                      <div className="text-white text-2xl font-bold">
-                        <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+            {VOCABULARY.slice(3, 5).map((word) => {
+              const imgData = getPlaceholderData(word.imageId);
+              return (
+                <Link key={word.id} href={`/learning/${word.id}`}>
+                  <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group">
+                    <div className="relative h-40 w-full">
+                      <Image
+                        src={imgData.url}
+                        alt={word.english}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        data-ai-hint={imgData.hint}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-4 left-4">
+                        <div className="text-white text-2xl font-bold">
+                          <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
