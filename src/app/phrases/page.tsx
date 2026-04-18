@@ -1,10 +1,9 @@
-
 "use client"
 
 import React, { useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageSquare, Sparkles, Languages, Loader2, Trash2, AlertCircle } from 'lucide-react';
+import { MessageSquare, Sparkles, Languages, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -48,18 +47,16 @@ export default function PhrasesPage() {
         isMastered: false,
       }, { merge: true });
 
-      if (result.frenchText.includes('(en français)') || result.frenchText.includes('[Traduction]')) {
-        toast({
-          title: "Mode Démo",
-          description: "La traduction est simulée. Ajoute ta clé API dans le fichier .env pour activer la vraie magie !",
-        });
-      }
-    } catch (error) {
-      console.error(error);
+      toast({
+        title: "Phrase ajoutée !",
+        description: "Ta nouvelle phrase magique est prête à être apprise.",
+      });
+    } catch (error: any) {
+      console.error('Translation Error:', error);
       toast({
         variant: "destructive",
         title: "Erreur de traduction",
-        description: "Désolé, la magie n'a pas fonctionné cette fois.",
+        description: error.message || "Désolé, la magie n'a pas fonctionné cette fois. Vérifie ta configuration API.",
       });
     } finally {
       setIsTranslating(false);

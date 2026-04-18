@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Flow to translate English phrases to simple French for children.
- * Includes a robust fallback mode for prototyping when an API key is not yet configured.
+ * Removed fallback mode to ensure real API connectivity is verified.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,48 +18,28 @@ const TranslatePhraseOutputSchema = z.object({
 
 /**
  * Translates a phrase using Gemini.
- * Falls back to a simulated translation if the API key is missing or invalid.
+ * Throws an error if the translation fails or the API key is invalid.
  */
 export async function translatePhrase(input: { englishText: string }) {
-  const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  
-  // Detect if the key is the default placeholder or missing
-  const isPlaceholderKey = !apiKey || apiKey === 'your_actual_api_key_here' || apiKey.length < 10;
-
-  if (isPlaceholderKey) {
-    console.warn('Genkit: No valid API key found in GOOGLE_GENAI_API_KEY. Using mock translation.');
-    return {
-      frenchText: `${input.englishText} ✨ [Mode Démo]`,
-      englishText: input.englishText
-    };
-  }
-
-  try {
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
-      prompt: `You are a friendly, magical French tutor for children. 
-      Translate the following English phrase to simple, kid-friendly French. 
-      Keep it very simple so a 5-year-old can repeat it.
-      
-      English Phrase: "${input.englishText}"`,
-      output: { schema: TranslatePhraseOutputSchema },
-      config: {
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-        ]
-      }
-    });
-
-    if (!output) throw new Error('Translation failed: No output from model');
-    return output;
-  } catch (error: any) {
-    console.error('Genkit Translation Error:', error.message);
+  const { output } = await ai.generate({
+    model: 'googleai/gemini-2.5-flash',
+    prompt: `You are a friendly, magical French tutor for children. 
+    Translate the following English phrase to simple, kid-friendly French. 
+    Keep it very simple so a 5-year-old can repeat it.
     
-    // Fallback to demo mode if there's an API error (like invalid key)
-    return {
-      frenchText: `${input.englishText} ✨ [Mode Démo]`,
-      englishText: input.englishText
-    };
+    English Phrase: "${input.englishText}"`,
+    output: { schema: TranslatePhraseOutputSchema },
+    config: {
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+      ]
+    }
+  });
+
+  if (!output) {
+    throw new Error('Translation failed: No output received from the model. Check your API key and quota.');
   }
+  
+  return output;
 }
