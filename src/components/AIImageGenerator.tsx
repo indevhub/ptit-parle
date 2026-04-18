@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles, Key, Info } from 'lucide-react';
+import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles, Key, Info, ExternalLink } from 'lucide-react';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import Image from 'next/image';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -26,7 +26,6 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
     setIsDemoMode(false);
     
     try {
-      // Check if we have a valid-looking key in the UI (basic check)
       const url = await generateWordImage({ word });
       if (url) {
         setGeneratedUrl(url);
@@ -42,7 +41,8 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
         errorMessage.includes('API key') || 
         errorMessage.includes('400') || 
         errorMessage.includes('invalid') ||
-        errorMessage.includes('not found');
+        errorMessage.includes('not found') ||
+        errorMessage.includes('permission');
       
       if (isAuthError) {
         setIsDemoMode(true);
@@ -88,12 +88,12 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             className="object-cover"
           />
           {isDemoMode && (
-            <div className="absolute top-2 left-2 right-2 bg-yellow-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center justify-between shadow-lg">
-              <div className="flex items-center gap-1">
+            <div className="absolute top-2 left-2 right-2 bg-yellow-500/95 backdrop-blur-md text-white text-[10px] font-bold px-3 py-2 rounded-full flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-1.5">
                 <Key className="h-3 w-3" />
-                DÉMO : CLÉ API REQUISE
+                CLÉ API REQUISE
               </div>
-              <Info className="h-3 w-3" />
+              <Sparkles className="h-3 w-3 animate-pulse" />
             </div>
           )}
           <Button
@@ -123,10 +123,24 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             <TranslatedText fr="Générer l'Image" en="Generate Image" />
           </Button>
           
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-            <p className="text-[11px] text-blue-700 leading-tight">
-              <strong>Astuce pour Seattle :</strong> Si AI Studio te redirige, crée ta clé dans la <a href="https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com" target="_blank" className="underline font-bold">Console Cloud</a> et colle-la dans <code className="bg-white px-1 rounded">.env</code>.
-            </p>
+          <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-3">
+            <div className="flex items-start gap-3">
+              <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+              <div className="text-[11px] text-blue-700 leading-normal">
+                <p className="font-bold mb-1 underline">Solution pour Seattle / US :</p>
+                <p>Si AI Studio redirige, utilisez la Console Cloud :</p>
+              </div>
+            </div>
+            
+            <ol className="text-[10px] text-blue-600/80 space-y-1.5 list-decimal pl-4">
+              <li>
+                Allez sur <a href="https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com" target="_blank" className="font-bold underline inline-flex items-center gap-0.5">Console Cloud <ExternalLink className="h-2 w-2" /></a>
+              </li>
+              <li>Activez <strong>Generative Language API</strong>.</li>
+              <li>Créez une <strong>Clé API</strong> dans "Identifiants".</li>
+              <li>Dans "Restrictions API", cherchez et cochez <strong>Generative Language API</strong>.</li>
+              <li>Collez la clé dans le fichier <code className="bg-white px-1 rounded font-bold">.env</code>.</li>
+            </ol>
           </div>
           
           {error && (
