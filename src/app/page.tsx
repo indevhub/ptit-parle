@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link';
@@ -38,6 +39,8 @@ export default function HomePage() {
                 src={heroImage}
                 alt="Enfants qui apprennent"
                 fill
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 450px"
                 className="object-cover"
                 data-ai-hint="kids learning"
              />

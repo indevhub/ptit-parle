@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Flow to translate English phrases to simple French for children.
- * Removed fallback mode to ensure real API connectivity is verified.
+ * No fallbacks or demo modes - strictly requires a valid API configuration.
  */
 
 import { ai } from '@/ai/genkit';
