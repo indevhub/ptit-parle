@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Flow to translate English phrases to simple French for children.
@@ -18,13 +17,13 @@ const TranslatePhraseOutputSchema = z.object({
 });
 
 /**
- * Translates a phrase using Gemini 1.5 Flash.
+ * Translates a phrase using Gemini.
  * Falls back to a simulated translation if the API key is missing or invalid.
  */
 export async function translatePhrase(input: { englishText: string }) {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
   
-  // Detect if the key is the default placeholder or too short to be real
+  // Detect if the key is the default placeholder or missing
   const isPlaceholderKey = !apiKey || apiKey === 'your_actual_api_key_here' || apiKey.length < 10;
 
   if (isPlaceholderKey) {
@@ -57,6 +56,7 @@ export async function translatePhrase(input: { englishText: string }) {
   } catch (error: any) {
     console.error('Genkit Translation Error:', error.message);
     
+    // Fallback to demo mode if there's an API error (like invalid key)
     return {
       frenchText: `${input.englishText} ✨ [Mode Démo]`,
       englishText: input.englishText
