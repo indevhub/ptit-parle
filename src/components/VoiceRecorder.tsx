@@ -28,7 +28,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
+    if (SpeechRecognition && !recognitionRef.current) {
       const recognition = new SpeechRecognition();
       recognition.lang = 'fr-FR';
       recognition.interimResults = false;
@@ -46,12 +46,8 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
           const result: SpeechFeedback = {
             transcript: event.results[0][0].transcript,
             isGoodPronunciation: isMatch,
-            frFeedback: isMatch 
-              ? `Super !` 
-              : `Pas tout à fait.`,
-            enFeedback: isMatch
-              ? `Great!`
-              : `Not quite.`
+            frFeedback: isMatch ? `Magnifique !` : `Essaie encore !`,
+            enFeedback: isMatch ? `Great!` : `Try again!`
           };
 
           setFeedback(result);
@@ -67,6 +63,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       };
 
       recognition.onerror = (event: any) => {
+        console.error('Recognition error:', event.error);
         setIsProcessing(false);
         setIsRecording(false);
         if (event.error === 'not-allowed') {
@@ -84,21 +81,26 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
 
       recognitionRef.current = recognition;
     }
-  }, [targetPhrase, onSuccess, toast]);
+
+    return () => {
+      if (recognitionRef.current && isRecording) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [targetPhrase, onSuccess, toast, isRecording]);
 
   const startRecording = () => {
     if (!recognitionRef.current) {
-      toast({ title: "Désolé", description: "La reconnaissance vocale n'est pas supportée par ton navigateur." });
+      toast({ title: "Désolé", description: "La reconnaissance vocale n'est pas supportée ici." });
       return;
     }
     setFeedback(null);
-    setIsRecording(true);
     setIsProcessing(false);
     try {
       recognitionRef.current.start();
+      setIsRecording(true);
     } catch (e) {
       setIsRecording(false);
-      setIsProcessing(false);
     }
   };
 
@@ -116,7 +118,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
             onClick={startRecording}
             disabled={isProcessing}
             size="lg"
-            className="rounded-full h-12 w-12 bg-primary hover:bg-primary/90 child-button p-0"
+            className="rounded-full h-12 w-12 bg-primary hover:bg-primary/90 child-button p-0 shadow-md"
           >
             {isProcessing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Mic className="h-6 w-6" />}
           </Button>
@@ -124,7 +126,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
           <Button
             onClick={stopRecording}
             size="lg"
-            className="rounded-full h-12 w-12 bg-destructive hover:bg-destructive/90 child-button animate-pulse p-0"
+            className="rounded-full h-12 w-12 bg-destructive hover:bg-destructive/90 child-button animate-pulse p-0 shadow-lg"
           >
             <Square className="h-6 w-6" />
           </Button>
@@ -132,7 +134,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       </div>
 
       {(isRecording || feedback || isProcessing) && (
-        <div className="text-center animate-in fade-in slide-in-from-top-1">
+        <div className="text-center min-h-[1.5rem] animate-in fade-in slide-in-from-top-1">
           {isRecording && (
             <div className="text-[10px] font-bold text-destructive animate-pulse uppercase tracking-wider">
               On t'écoute...

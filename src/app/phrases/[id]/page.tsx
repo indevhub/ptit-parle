@@ -24,8 +24,8 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // We must wait for auth and firestore loading states before deciding if the data is missing
-  if (isUserLoading || !user || isLoading) {
+  // CRITICAL: We MUST stay in loading state if the user session or the phrase ref is not yet established
+  if (isUserLoading || !user || isLoading || !phraseRef) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -33,7 +33,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // Only throw 404 if loading is complete, user is authenticated, and no document was found
+  // Only throw 404 if loading is truly complete and no data was returned
   if (!phrase) {
     return notFound();
   }

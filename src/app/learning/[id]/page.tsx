@@ -21,12 +21,11 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  // If word doesn't exist in our static vocabulary, 404 immediately
   if (!word) {
     return notFound();
   }
 
-  // Wait for auth session before showing interactive tools
+  // CRITICAL: We MUST stay in loading state if the user session is not yet established
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
@@ -89,10 +88,10 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
               src={imgData.url}
               alt={word.french}
               fill
+              priority
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 600px"
               data-ai-hint={imgData.hint}
-              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute bottom-8 left-0 right-0 text-center">

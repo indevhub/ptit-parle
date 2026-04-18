@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -19,7 +18,7 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
+    if (SpeechRecognition && !recognitionRef.current) {
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
@@ -33,8 +32,14 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
         setIsRecording(false);
       };
 
-      recognition.onerror = () => setIsRecording(false);
-      recognition.onend = () => setIsRecording(false);
+      recognition.onerror = (event: any) => {
+        console.error('English recognition error:', event.error);
+        setIsRecording(false);
+      };
+      
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
 
       recognitionRef.current = recognition;
     }
@@ -45,10 +50,12 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
        toast({ title: "Non supporté", description: "Ton navigateur ne supporte pas la dictée vocale." });
        return;
     }
-    setIsRecording(true);
     try {
       recognitionRef.current.start();
-    } catch (e) {}
+      setIsRecording(true);
+    } catch (e) {
+      setIsRecording(false);
+    }
   };
 
   const stopRecording = () => {
