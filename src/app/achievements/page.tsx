@@ -20,9 +20,9 @@ export default function AchievementsPage() {
           <h1 className="text-3xl font-bold text-primary mb-2">
             <TranslatedText fr="Tes Médailles" en="Your Medals" />
           </h1>
-          <p className="text-muted-foreground font-medium">
+          <div className="text-muted-foreground font-medium">
             <TranslatedText fr="Collectionne-les toutes !" en="Collect them all!" />
-          </p>
+          </div>
         </div>
       </header>
 
@@ -37,12 +37,12 @@ export default function AchievementsPage() {
                     {isEarned ? achievement.icon : <Lock className="h-8 w-8 text-muted-foreground" />}
                   </div>
                   <div className="flex-1">
-                    <h3 className={`font-bold text-lg ${isEarned ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <div className={`font-bold text-lg ${isEarned ? 'text-foreground' : 'text-muted-foreground'}`}>
                       <TranslatedText fr={achievement.title} en="Achievement Title" />
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
+                    </div>
+                    <div className="text-sm text-muted-foreground">
                       <TranslatedText fr={achievement.description} en="Earn this medal by learning words." />
-                    </p>
+                    </div>
                   </div>
                   {isEarned && (
                     <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
@@ -60,23 +60,23 @@ export default function AchievementsPage() {
            <div className="flex justify-around">
              <div>
                <p className="text-3xl font-bold text-primary">1</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">
+               <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Médailles" en="Medals" />
-               </p>
+               </div>
              </div>
              <div className="w-px bg-border" />
              <div>
                <p className="text-3xl font-bold text-primary">12</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">
+               <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Étoiles" en="Stars" />
-               </p>
+               </div>
              </div>
              <div className="w-px bg-border" />
              <div>
                <p className="text-3xl font-bold text-primary">3</p>
-               <p className="text-xs text-muted-foreground uppercase font-bold">
+               <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Mots" en="Words" />
-               </p>
+               </div>
              </div>
            </div>
         </section>

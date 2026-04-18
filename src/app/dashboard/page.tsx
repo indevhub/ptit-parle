@@ -29,9 +29,9 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-primary mb-1">
               <TranslatedText fr="Salut, Explorateur ! 👋" en="Hi, Explorer! 👋" />
             </h1>
-            <p className="text-muted-foreground font-medium">
+            <div className="text-muted-foreground font-medium">
               <TranslatedText fr="Prêt pour une nouvelle aventure ?" en="Ready for a new adventure?" />
-            </p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
              <Button 
@@ -96,9 +96,9 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4">
                       <div className="flex flex-col">
-                        <h3 className="text-white text-2xl font-bold">
+                        <div className="text-white text-2xl font-bold">
                           <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
-                        </h3>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -117,9 +117,9 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold text-accent">
                 <TranslatedText fr="Défi du jour !" en="Daily Challenge!" />
               </h3>
-              <p className="text-sm text-foreground/70">
+              <div className="text-sm text-foreground/70">
                 <TranslatedText fr="Apprends 3 nouveaux mots aujourd'hui pour gagner un badge spécial." en="Learn 3 new words today to earn a special badge." />
-              </p>
+              </div>
             </div>
           </div>
         </section>

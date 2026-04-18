@@ -23,13 +23,13 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
   }
 
   return (
-    <div className={cn("flex flex-col", className)}>
+    <span className={cn("flex flex-col", className)}>
       <span>{fr}</span>
       {showEnglish && (
         <span className={cn("text-[0.8em] leading-tight font-medium text-muted-foreground animate-in fade-in slide-in-from-top-1", enClassName)}>
           {en}
         </span>
       )}
-    </div>
+    </span>
   );
 }

@@ -122,19 +122,19 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
 
       {isRecording && (
         <div className="flex flex-col items-center gap-2">
-          <p className="text-sm font-bold text-destructive animate-bounce">
+          <div className="text-sm font-bold text-destructive animate-bounce">
             <TranslatedText fr="On t'écoute..." en="Listening..." />
-          </p>
-          <p className="text-xs text-muted-foreground italic">
+          </div>
+          <div className="text-xs text-muted-foreground italic">
             <TranslatedText fr={`Dis "${targetPhrase}"`} en={`Say "${targetPhrase}"`} />
-          </p>
+          </div>
         </div>
       )}
 
       {isProcessing && (
-        <p className="text-sm font-medium text-primary">
+        <div className="text-sm font-medium text-primary">
           <TranslatedText fr="Analyse en cours..." en="Analyzing..." />
-        </p>
+        </div>
       )}
 
       {feedback && (
@@ -152,9 +152,9 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
               />
             </span>
           </div>
-          <p className="text-sm text-foreground/80 mb-1">
+          <div className="text-sm text-foreground/80 mb-1">
             <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
-          </p>
+          </div>
         </div>
       )}
     </div>
