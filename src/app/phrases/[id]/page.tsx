@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use } from 'react';
@@ -25,8 +24,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // CRITICAL: We must wait for the user to be non-null before we check if the phrase data exists.
-  // Otherwise, useDoc returns null data immediately and triggers a 404 before sign-in finishes.
+  // We must wait for auth and firestore loading states before deciding if the data is missing
   if (isUserLoading || !user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
@@ -35,7 +33,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // Only after we have a user and loading has finished do we decide to 404
+  // Only throw 404 if loading is complete, user is authenticated, and no document was found
   if (!phrase) {
     return notFound();
   }

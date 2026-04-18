@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -37,29 +36,34 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
 
       recognition.onresult = (event: any) => {
         setIsProcessing(true);
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
-        const cleanTranscript = transcript.replace(/[.,!?;:]/g, "").trim();
+        try {
+          const transcript = event.results[0][0].transcript.toLowerCase();
+          const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+          const cleanTranscript = transcript.replace(/[.,!?;:]/g, "").trim();
 
-        const isMatch = target.length > 0 && (cleanTranscript.includes(target) || target.includes(cleanTranscript));
-        
-        const result: SpeechFeedback = {
-          transcript: event.results[0][0].transcript,
-          isGoodPronunciation: isMatch,
-          frFeedback: isMatch 
-            ? `Super !` 
-            : `Pas tout à fait.`,
-          enFeedback: isMatch
-            ? `Great!`
-            : `Not quite.`
-        };
+          const isMatch = target.length > 0 && (cleanTranscript.includes(target) || target.includes(cleanTranscript));
+          
+          const result: SpeechFeedback = {
+            transcript: event.results[0][0].transcript,
+            isGoodPronunciation: isMatch,
+            frFeedback: isMatch 
+              ? `Super !` 
+              : `Pas tout à fait.`,
+            enFeedback: isMatch
+              ? `Great!`
+              : `Not quite.`
+          };
 
-        setFeedback(result);
-        if (isMatch) {
-          onSuccess?.();
+          setFeedback(result);
+          if (isMatch) {
+            onSuccess?.();
+          }
+        } catch (err) {
+          console.error('Speech Recognition Error:', err);
+        } finally {
+          setIsProcessing(false);
+          setIsRecording(false);
         }
-        setIsProcessing(false);
-        setIsRecording(false);
       };
 
       recognition.onerror = (event: any) => {

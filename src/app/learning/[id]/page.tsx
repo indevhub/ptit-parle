@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use } from 'react';
@@ -22,11 +21,12 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
+  // If word doesn't exist in our static vocabulary, 404 immediately
   if (!word) {
     return notFound();
   }
 
-  // Robust loading check: Wait for user session and auth initialization
+  // Wait for auth session before showing interactive tools
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
