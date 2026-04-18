@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -13,14 +13,13 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTranslation } from '@/context/TranslationContext';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useUser, useFirestore, useAuth, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const auth = useAuth();
   const { toggleEnglish } = useTranslation();
 
   const profilesRef = useMemoFirebase(() => {
@@ -29,12 +28,6 @@ export default function DashboardPage() {
   }, [firestore, user]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
-
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [user, isUserLoading, auth]);
 
   useEffect(() => {
     if (user && profiles && profiles.length === 0 && firestore) {

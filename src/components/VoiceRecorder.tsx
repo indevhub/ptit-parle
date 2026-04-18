@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -35,11 +36,13 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event: any) => {
+        setIsProcessing(true);
         const transcript = event.results[0][0].transcript.toLowerCase();
-        const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "");
-        const cleanTranscript = transcript.replace(/[.,!?;:]/g, "");
+        const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+        const cleanTranscript = transcript.replace(/[.,!?;:]/g, "").trim();
 
-        const isMatch = cleanTranscript.includes(target) || target.includes(cleanTranscript);
+        // Simple check: transcript contains target or vice versa
+        const isMatch = target.length > 0 && (cleanTranscript.includes(target) || target.includes(cleanTranscript));
         
         const result: SpeechFeedback = {
           transcript: event.results[0][0].transcript,
@@ -81,19 +84,30 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   }, [targetPhrase, onSuccess, toast]);
 
   const startRecording = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current) {
+      toast({ title: "Désolé", description: "La reconnaissance vocale n'est pas supportée par ton navigateur." });
+      return;
+    }
     setFeedback(null);
     setIsRecording(true);
     setIsProcessing(false);
     try {
       recognitionRef.current.start();
-    } catch (e) {}
+    } catch (e) {
+      console.error("Speech recognition start error:", e);
+      setIsRecording(false);
+    }
   };
 
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
-      recognitionRef.current.stop();
-      setIsProcessing(true);
+      try {
+        recognitionRef.current.stop();
+        setIsProcessing(true);
+      } catch (e) {
+        setIsRecording(false);
+        setIsProcessing(false);
+      }
     }
   };
 

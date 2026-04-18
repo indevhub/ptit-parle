@@ -25,24 +25,23 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // We must check both document loading AND auth loading to prevent 
-  // a premature 404 before the user identity is confirmed.
-  if (isLoading || isUserLoading) {
+  // Wait for auth to resolve and data to load before making a 404 decision
+  if (isUserLoading || (user && isLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
       </div>
     );
   }
 
-  // Only trigger notFound if loading is finished, auth is finished, and no document exists.
-  if (!phrase && !isLoading && !isUserLoading) return notFound();
+  // If auth finished and we still have no user, or data finished and no phrase
+  if (!user || (!phrase && !isLoading)) return notFound();
 
   const handlePronunciationSuccess = () => {
     if (user && firestore) {
       const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner');
       updateDocumentNonBlocking(profileRef, {
-        totalStarsEarned: increment(2), // Phrases are harder!
+        totalStarsEarned: increment(2),
         lastActiveAt: new Date().toISOString(),
       });
 
