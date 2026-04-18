@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -13,16 +14,15 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTranslation } from '@/context/TranslationContext';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useUser, useFirestore, useAuth, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
-import { collection, doc, setDoc, serverTimestamp, query, limit } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const auth = useAuth();
-  const { showEnglish, toggleEnglish } = useTranslation();
+  const { toggleEnglish } = useTranslation();
 
-  // Memoize the learner profiles collection reference
   const profilesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'learnerProfiles');
@@ -30,14 +30,12 @@ export default function DashboardPage() {
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
 
-  // Handle anonymous sign-in if no user is present
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth]);
 
-  // Create a default profile if none exists
   useEffect(() => {
     if (user && profiles && profiles.length === 0 && firestore) {
       const profileId = 'main-learner';
@@ -53,10 +51,15 @@ export default function DashboardPage() {
   }, [user, profiles, firestore]);
 
   const activeProfile = profiles?.[0];
-  const learnedCount = 3; // For MVP, we'll keep this simple, or fetch from progress collection
+  const learnedCount = 3; 
 
   const getImageUrl = (id: string) => {
-    return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
+    const placeholder = PlaceHolderImages.find(img => img.id === id);
+    return placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`;
+  };
+
+  const getImageHint = (id: string) => {
+    return PlaceHolderImages.find(img => img.id === id)?.imageHint || id;
   };
 
   if (isUserLoading || isProfilesLoading) {
@@ -84,7 +87,7 @@ export default function DashboardPage() {
                 variant="outline" 
                 size="icon" 
                 onClick={toggleEnglish}
-                className={`rounded-full border-2 transition-all ${showEnglish ? 'bg-primary border-primary text-white' : 'border-muted text-muted-foreground'}`}
+                className="rounded-full border-2 border-muted text-muted-foreground"
               >
                 <Languages className="h-5 w-5" />
               </Button>
@@ -110,15 +113,6 @@ export default function DashboardPage() {
           <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden">
             <CardContent className="p-6">
               <Progress value={(learnedCount / VOCABULARY.length) * 100} className="h-4 bg-muted" />
-              <div className="mt-4 flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                 {VOCABULARY.slice(0, 4).map((word) => (
-                    <div key={word.id} className="flex-shrink-0 flex flex-col items-center gap-2">
-                      <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${learnedCount >= Number(word.id) ? 'bg-primary/20 border-primary text-primary' : 'bg-muted border-border text-muted-foreground'}`}>
-                        {learnedCount >= Number(word.id) ? '✓' : word.id}
-                      </div>
-                    </div>
-                 ))}
-              </div>
             </CardContent>
           </Card>
         </section>
@@ -137,14 +131,12 @@ export default function DashboardPage() {
                       alt={word.english}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      data-ai-hint={word.english}
+                      data-ai-hint={getImageHint(word.imageId)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4">
-                      <div className="flex flex-col">
-                        <div className="text-white text-2xl font-bold">
-                          <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
-                        </div>
+                      <div className="text-white text-2xl font-bold">
+                        <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
                       </div>
                     </div>
                   </div>

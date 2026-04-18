@@ -1,3 +1,4 @@
+
 import { VocabularyWord, Achievement } from '../types/learning';
 
 export const VOCABULARY: VocabularyWord[] = [

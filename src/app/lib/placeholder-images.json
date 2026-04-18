@@ -3,56 +3,56 @@
   "placeholderImages": [
     {
       "id": "apple",
-      "description": "A fresh red apple",
-      "imageUrl": "https://picsum.photos/seed/apple/600/600",
+      "description": "Une pomme rouge fraîche",
+      "imageUrl": "https://picsum.photos/seed/apple123/600/600",
       "imageHint": "red apple"
     },
     {
       "id": "dog",
-      "description": "A happy golden retriever dog",
-      "imageUrl": "https://picsum.photos/seed/dog/600/600",
+      "description": "Un chien joyeux",
+      "imageUrl": "https://picsum.photos/seed/dog456/600/600",
       "imageHint": "happy dog"
     },
     {
       "id": "cat",
-      "description": "A cute ginger cat",
-      "imageUrl": "https://picsum.photos/seed/cat/600/600",
+      "description": "Un petit chat mignon",
+      "imageUrl": "https://picsum.photos/seed/cat789/600/600",
       "imageHint": "cute cat"
     },
     {
-      "id": "sun",
-      "description": "A bright shining sun",
-      "imageUrl": "https://picsum.photos/seed/sun/600/600",
+      "id": "nature",
+      "description": "Le soleil qui brille",
+      "imageUrl": "https://picsum.photos/seed/sun101/600/600",
       "imageHint": "bright sun"
     },
     {
       "id": "water",
-      "description": "A glass of clear water",
-      "imageUrl": "https://picsum.photos/seed/water/600/600",
+      "description": "Un verre d'eau",
+      "imageUrl": "https://picsum.photos/seed/water202/600/600",
       "imageHint": "glass water"
     },
     {
       "id": "bread",
-      "description": "A fresh french baguette",
-      "imageUrl": "https://picsum.photos/seed/bread/600/600",
-      "imageHint": "french baguette"
+      "description": "Du pain frais",
+      "imageUrl": "https://picsum.photos/seed/bread303/600/600",
+      "imageHint": "french bread"
     },
     {
       "id": "book",
-      "description": "An open colorful book",
-      "imageUrl": "https://picsum.photos/seed/book/600/600",
+      "description": "Un livre ouvert",
+      "imageUrl": "https://picsum.photos/seed/book404/600/600",
       "imageHint": "open book"
     },
     {
       "id": "school",
-      "description": "A friendly looking school building",
-      "imageUrl": "https://picsum.photos/seed/school/600/600",
+      "description": "Une école colorée",
+      "imageUrl": "https://picsum.photos/seed/school505/600/600",
       "imageHint": "school building"
     },
     {
       "id": "hero",
-      "description": "Kids learning playfully",
-      "imageUrl": "https://picsum.photos/seed/kids/1200/800",
+      "description": "Enfants qui apprennent",
+      "imageUrl": "https://picsum.photos/seed/kids606/1200/800",
       "imageHint": "kids learning"
     }
   ]
