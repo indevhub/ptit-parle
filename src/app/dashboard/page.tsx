@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -13,13 +12,14 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTranslation } from '@/context/TranslationContext';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
+import { useUser, useFirestore, useAuth, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
 import { collection, doc, setDoc, serverTimestamp, query, limit } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { showEnglish, toggleEnglish } = useTranslation();
 
   // Memoize the learner profiles collection reference
@@ -32,11 +32,10 @@ export default function DashboardPage() {
 
   // Handle anonymous sign-in if no user is present
   useEffect(() => {
-    if (!isUserLoading && !user && firestore) {
-      const auth = require('firebase/auth').getAuth();
+    if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
-  }, [user, isUserLoading, firestore]);
+  }, [user, isUserLoading, auth]);
 
   // Create a default profile if none exists
   useEffect(() => {
