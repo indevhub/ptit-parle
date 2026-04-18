@@ -1,10 +1,11 @@
+
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Star, Trophy, Sparkles, Languages } from 'lucide-react';
+import { Star, Trophy, Sparkles, Languages, Loader2 } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -12,14 +13,60 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTranslation } from '@/context/TranslationContext';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useUser, useFirestore, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
+import { collection, doc, setDoc, serverTimestamp, query, limit } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function DashboardPage() {
-  const [progress] = useState({ stars: 12, total: VOCABULARY.length, learned: 3 });
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const { showEnglish, toggleEnglish } = useTranslation();
+
+  // Memoize the learner profiles collection reference
+  const profilesRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'learnerProfiles');
+  }, [firestore, user]);
+
+  const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
+
+  // Handle anonymous sign-in if no user is present
+  useEffect(() => {
+    if (!isUserLoading && !user && firestore) {
+      const auth = require('firebase/auth').getAuth();
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, firestore]);
+
+  // Create a default profile if none exists
+  useEffect(() => {
+    if (user && profiles && profiles.length === 0 && firestore) {
+      const profileId = 'main-learner';
+      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+      setDocumentNonBlocking(profileRef, {
+        id: profileId,
+        name: 'Explorateur',
+        totalStarsEarned: 0,
+        currentTheme: 'Default',
+        lastActiveAt: new Date().toISOString(),
+      }, { merge: true });
+    }
+  }, [user, profiles, firestore]);
+
+  const activeProfile = profiles?.[0];
+  const learnedCount = 3; // For MVP, we'll keep this simple, or fetch from progress collection
 
   const getImageUrl = (id: string) => {
     return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
   };
+
+  if (isUserLoading || isProfilesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="pb-24 min-h-screen">
@@ -27,7 +74,7 @@ export default function DashboardPage() {
         <div className="max-w-screen-md mx-auto flex items-center justify-between">
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-primary mb-1">
-              <TranslatedText fr="Salut, Explorateur ! 👋" en="Hi, Explorer! 👋" />
+              <TranslatedText fr={`Salut, ${activeProfile?.name || 'Explorateur'} ! 👋`} en={`Hi, ${activeProfile?.name || 'Explorer'}! 👋`} />
             </h1>
             <div className="text-muted-foreground font-medium">
               <TranslatedText fr="Prêt pour une nouvelle aventure ?" en="Ready for a new adventure?" />
@@ -44,7 +91,7 @@ export default function DashboardPage() {
               </Button>
             <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2">
               <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-              <span className="font-bold text-primary text-xl">{progress.stars}</span>
+              <span className="font-bold text-primary text-xl">{activeProfile?.totalStarsEarned || 0}</span>
             </div>
           </div>
         </div>
@@ -58,17 +105,17 @@ export default function DashboardPage() {
               <TranslatedText fr="Ton Progrès" en="Your Progress" />
             </h2>
             <span className="text-sm font-bold text-muted-foreground">
-              {progress.learned}/{progress.total} <TranslatedText fr="mots" en="words" inline />
+              {learnedCount}/{VOCABULARY.length} <TranslatedText fr="mots" en="words" inline />
             </span>
           </div>
           <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden">
             <CardContent className="p-6">
-              <Progress value={(progress.learned / progress.total) * 100} className="h-4 bg-muted" />
+              <Progress value={(learnedCount / VOCABULARY.length) * 100} className="h-4 bg-muted" />
               <div className="mt-4 flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                  {VOCABULARY.slice(0, 4).map((word) => (
                     <div key={word.id} className="flex-shrink-0 flex flex-col items-center gap-2">
-                      <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${progress.learned > Number(word.id) ? 'bg-primary/20 border-primary text-primary' : 'bg-muted border-border text-muted-foreground'}`}>
-                        {progress.learned > Number(word.id) ? '✓' : word.id}
+                      <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${learnedCount >= Number(word.id) ? 'bg-primary/20 border-primary text-primary' : 'bg-muted border-border text-muted-foreground'}`}>
+                        {learnedCount >= Number(word.id) ? '✓' : word.id}
                       </div>
                     </div>
                  ))}

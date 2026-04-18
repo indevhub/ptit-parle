@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use } from 'react';
@@ -12,14 +13,44 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { notFound } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, increment } from 'firebase/firestore';
+import { updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   if (!word) {
     return notFound();
   }
+
+  const handlePronunciationSuccess = () => {
+    if (user && firestore) {
+      const profileId = 'main-learner';
+      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+      
+      // Award a star for successful pronunciation
+      updateDocumentNonBlocking(profileRef, {
+        totalStarsEarned: increment(1),
+        lastActiveAt: new Date().toISOString(),
+      });
+
+      // Also track mastery for this specific word
+      const vocabProgressRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
+      setDocumentNonBlocking(vocabProgressRef, {
+        learnerId: profileId,
+        vocabularyItemId: word.id,
+        isMastered: true,
+        lastAttemptedAt: new Date().toISOString(),
+        totalAttempts: increment(1),
+        successfulAttempts: increment(1),
+        bestPronunciationScore: 100
+      }, { merge: true });
+    }
+  };
 
   const getImageUrl = (imgId: string) => {
     return PlaceHolderImages.find(img => img.id === imgId)?.imageUrl || 'https://picsum.photos/seed/default/400/300';
@@ -71,7 +102,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
               <div className="font-bold text-primary uppercase tracking-widest text-sm">
                 <TranslatedText fr="2. Répète" en="2. Repeat" inline />
               </div>
-              <VoiceRecorder targetPhrase={word.french} onSuccess={() => console.log('Achievement Unlocked!')} />
+              <VoiceRecorder targetPhrase={word.french} onSuccess={handlePronunciationSuccess} />
             </div>
 
             <div className="w-full h-px bg-border max-w-[100px]" />
