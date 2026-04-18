@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles } from 'lucide-react';
+import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles, Key } from 'lucide-react';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import Image from 'next/image';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -39,16 +38,15 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
       // Check for invalid key or specific error codes
       const isAuthError = errorMessage.includes('API key') || errorMessage.includes('400') || errorMessage.includes('invalid');
       
-      // If AI is blocked or key is invalid, use high-quality fallback (Picsum)
       if (isAuthError) {
         setIsDemoMode(true);
-        // Using picsum.photos with the word as a seed for consistent mock images
+        // Use a high-quality fallback (Picsum) so the user isn't blocked
         const fallbackUrl = `https://picsum.photos/seed/${word}/600/600`;
         setGeneratedUrl(fallbackUrl);
         
         toast({
           title: 'Mode Démo Activé',
-          description: "Vérifie ta clé API dans le fichier .env pour activer les vrais dessins !",
+          description: "Ta clé API est manquante ou invalide. Utilisation d'images de remplacement.",
         });
       } else {
         setError('Échec de la génération');
@@ -84,9 +82,9 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             className="object-cover"
           />
           {isDemoMode && (
-            <div className="absolute top-2 left-2 bg-accent/90 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-              <Sparkles className="h-3 w-3" />
-              MODE DÉMO
+            <div className="absolute top-2 left-2 bg-yellow-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+              <Key className="h-3 w-3" />
+              CONFIG NECESSAIRE
             </div>
           )}
           <Button
@@ -115,6 +113,12 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             )}
             <TranslatedText fr="Générer l'Image" en="Generate Image" />
           </Button>
+          
+          {isDemoMode && (
+            <div className="text-[10px] text-center text-muted-foreground px-4">
+              Note: Pour de vrais dessins IA, ajoute ta clé API dans le fichier <code className="bg-muted px-1 rounded">.env</code>
+            </div>
+          )}
           
           {error && (
             <div className="flex items-center gap-2 text-destructive text-xs justify-center bg-destructive/10 p-2 rounded-xl animate-in fade-in slide-in-from-top-1">
