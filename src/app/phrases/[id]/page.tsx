@@ -25,8 +25,8 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // Wait for auth to resolve and data to load before making a 404 decision
-  if (isUserLoading || (user && isLoading)) {
+  // If we are still loading authentication or document data, show a loader
+  if (isUserLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -34,8 +34,10 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // If auth finished and we still have no user, or data finished and no phrase
-  if (!user || (!phrase && !isLoading)) return notFound();
+  // Once loading is finished, if we still have no user or no phrase, THEN show 404
+  if (!user || !phrase) {
+    return notFound();
+  }
 
   const handlePronunciationSuccess = () => {
     if (user && firestore) {
@@ -71,10 +73,10 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
         <main className="flex-1 space-y-8">
           <div className="bg-white rounded-[3rem] p-10 card-shadow text-center space-y-4">
              <div className="text-4xl md:text-5xl font-bold text-primary leading-tight">
-               {phrase?.frenchText}
+               {phrase.frenchText}
              </div>
              <div className="text-xl text-muted-foreground italic">
-               {phrase?.englishText}
+               {phrase.englishText}
              </div>
           </div>
 
@@ -84,7 +86,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
                 <div className="font-bold text-primary uppercase tracking-widest text-xs bg-primary/10 px-4 py-1 rounded-full">
                   <TranslatedText fr="1. Écoute la Phrase" en="1. Listen to Phrase" inline />
                 </div>
-                <AudioPlayer text={phrase?.frenchText || ''} />
+                <AudioPlayer text={phrase.frenchText} />
               </div>
 
               <div className="w-full h-px bg-border max-w-[150px]" />
@@ -93,7 +95,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
                 <div className="font-bold text-primary uppercase tracking-widest text-xs bg-primary/10 px-4 py-1 rounded-full">
                   <TranslatedText fr="2. Répète" en="2. Repeat" inline />
                 </div>
-                <VoiceRecorder targetPhrase={phrase?.frenchText || ''} onSuccess={handlePronunciationSuccess} />
+                <VoiceRecorder targetPhrase={phrase.frenchText} onSuccess={handlePronunciationSuccess} />
               </div>
             </div>
 

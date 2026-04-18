@@ -41,18 +41,17 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
         const target = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
         const cleanTranscript = transcript.replace(/[.,!?;:]/g, "").trim();
 
-        // Simple check: transcript contains target or vice versa
         const isMatch = target.length > 0 && (cleanTranscript.includes(target) || target.includes(cleanTranscript));
         
         const result: SpeechFeedback = {
           transcript: event.results[0][0].transcript,
           isGoodPronunciation: isMatch,
           frFeedback: isMatch 
-            ? `Excellent ! Tu as dit : "${event.results[0][0].transcript}"` 
-            : `Pas tout à fait. J'ai entendu : "${event.results[0][0].transcript}". Essaie encore !`,
+            ? `Super !` 
+            : `Pas tout à fait.`,
           enFeedback: isMatch
-            ? `Excellent! You said: "${event.results[0][0].transcript}"`
-            : `Not quite. I heard: "${event.results[0][0].transcript}". Try again!`
+            ? `Great!`
+            : `Not quite.`
         };
 
         setFeedback(result);
@@ -94,81 +93,60 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
     try {
       recognitionRef.current.start();
     } catch (e) {
-      console.error("Speech recognition start error:", e);
       setIsRecording(false);
+      setIsProcessing(false);
     }
   };
 
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
-      try {
-        recognitionRef.current.stop();
-        setIsProcessing(true);
-      } catch (e) {
-        setIsRecording(false);
-        setIsProcessing(false);
-      }
+      recognitionRef.current.stop();
     }
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-sm mx-auto p-4 rounded-3xl bg-white/50 card-shadow">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col items-center gap-3 w-full">
+      <div className="flex items-center justify-center">
         {!isRecording ? (
           <Button
             onClick={startRecording}
             disabled={isProcessing}
             size="lg"
-            className="rounded-full h-16 w-16 bg-primary hover:bg-primary/90 child-button"
+            className="rounded-full h-12 w-12 bg-primary hover:bg-primary/90 child-button p-0"
           >
-            {isProcessing ? <Loader2 className="h-8 w-8 animate-spin" /> : <Mic className="h-8 w-8" />}
+            {isProcessing ? <Loader2 className="h-6 w-6 animate-spin" /> : <Mic className="h-6 w-6" />}
           </Button>
         ) : (
           <Button
             onClick={stopRecording}
             size="lg"
-            className="rounded-full h-16 w-16 bg-destructive hover:bg-destructive/90 child-button animate-pulse"
+            className="rounded-full h-12 w-12 bg-destructive hover:bg-destructive/90 child-button animate-pulse p-0"
           >
-            <Square className="h-8 w-8" />
+            <Square className="h-6 w-6" />
           </Button>
         )}
       </div>
 
-      {isRecording && (
-        <div className="flex flex-col items-center gap-2">
-          <div className="text-sm font-bold text-destructive animate-bounce">
-            <TranslatedText fr="On t'écoute..." en="Listening..." />
-          </div>
-          <div className="text-xs text-muted-foreground italic">
-            <TranslatedText fr={`Dis "${targetPhrase}"`} en={`Say "${targetPhrase}"`} />
-          </div>
-        </div>
-      )}
-
-      {isProcessing && (
-        <div className="text-sm font-medium text-primary">
-          <TranslatedText fr="Analyse en cours..." en="Analyzing..." />
-        </div>
-      )}
-
-      {feedback && (
-        <div className={`flex flex-col items-center text-center p-4 rounded-2xl w-full animate-in fade-in zoom-in duration-300 ${feedback.isGoodPronunciation ? 'bg-green-100' : 'bg-orange-100'}`}>
-          <div className="flex items-center gap-2 mb-2">
-            {feedback.isGoodPronunciation ? (
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
-            ) : (
-              <XCircle className="h-6 w-6 text-orange-600" />
-            )}
-            <span className={`font-bold ${feedback.isGoodPronunciation ? 'text-green-700' : 'text-orange-700'}`}>
-              <TranslatedText 
-                fr={feedback.isGoodPronunciation ? 'Bravo !' : 'Encore un petit effort'} 
-                en={feedback.isGoodPronunciation ? 'Well done!' : 'Keep trying!'} 
-              />
-            </span>
-          </div>
-          <div className="text-sm text-foreground/80 mb-1">
-            <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
-          </div>
+      {(isRecording || feedback || isProcessing) && (
+        <div className="text-center animate-in fade-in slide-in-from-top-1">
+          {isRecording && (
+            <div className="text-[10px] font-bold text-destructive animate-pulse uppercase tracking-wider">
+              On t'écoute...
+            </div>
+          )}
+          {isProcessing && (
+            <div className="text-[10px] font-medium text-primary uppercase tracking-wider">
+              Analyse...
+            </div>
+          )}
+          {feedback && (
+            <div className={`flex items-center gap-1 justify-center ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
+              {feedback.isGoodPronunciation ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
