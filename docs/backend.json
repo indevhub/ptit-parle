@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "LearnerProfile": {
@@ -40,6 +41,34 @@
         "currentTheme",
         "lastActiveAt"
       ]
+    },
+    "PhraseItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PhraseItem",
+      "type": "object",
+      "description": "A custom phrase translated from English to French by the learner.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier."
+        },
+        "frenchText": {
+          "type": "string",
+          "description": "The translated French phrase."
+        },
+        "englishText": {
+          "type": "string",
+          "description": "The original English phrase."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isMastered": {
+          "type": "boolean"
+        }
+      },
+      "required": ["id", "frenchText", "englishText", "createdAt"]
     },
     "Lesson": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -89,7 +118,7 @@
         },
         "lessonId": {
           "type": "string",
-          "description": "Reference to the Lesson this vocabulary item belongs to. (Relationship: Lesson 1:N VocabularyItem)"
+          "description": "Reference to the Lesson this vocabulary item belongs to."
         },
         "frenchText": {
           "type": "string",
@@ -101,17 +130,17 @@
         },
         "audioUrl": {
           "type": "string",
-          "description": "URL to the high-quality audio recording of the French word/phrase by a native speaker.",
+          "description": "URL to the audio recording.",
           "format": "uri"
         },
         "imageUrl": {
           "type": "string",
-          "description": "URL to a visual aid image relevant to the word or phrase.",
+          "description": "URL to a visual aid image.",
           "format": "uri"
         },
         "difficultyLevel": {
           "type": "string",
-          "description": "An indicator of the difficulty level for this vocabulary item (e.g., 'easy', 'medium', 'hard')."
+          "description": "Indicator of difficulty."
         }
       },
       "required": [
@@ -128,220 +157,16 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LearnerLessonProgress",
       "type": "object",
-      "description": "Tracks a specific learner's progress and performance within a particular lesson.",
+      "description": "Tracks progress in a lesson.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LearnerLessonProgress entity."
-        },
-        "learnerId": {
-          "type": "string",
-          "description": "Reference to the LearnerProfile. (Relationship: LearnerProfile 1:N LearnerLessonProgress)"
-        },
-        "lessonId": {
-          "type": "string",
-          "description": "Reference to the Lesson. (Relationship: Lesson 1:N LearnerLessonProgress)"
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the learner's progress in the lesson (e.g., 'notStarted', 'inProgress', 'completed')."
-        },
-        "starsEarned": {
-          "type": "number",
-          "description": "The number of stars earned by the learner specifically for this lesson."
-        },
-        "lastAccessedAt": {
-          "type": "string",
-          "description": "Timestamp of the last time the learner accessed or made progress in this lesson.",
-          "format": "date-time"
-        },
-        "completionDate": {
-          "type": "string",
-          "description": "Timestamp when the learner completed this lesson, if applicable.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "learnerId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "status": { "type": "string" },
+        "starsEarned": { "type": "number" },
+        "lastAccessedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "learnerId",
-        "lessonId",
-        "status",
-        "starsEarned",
-        "lastAccessedAt"
-      ]
-    },
-    "LearnerVocabularyProgress": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LearnerVocabularyProgress",
-      "type": "object",
-      "description": "Tracks a specific learner's aggregated progress for a particular vocabulary item, including pronunciation attempts.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LearnerVocabularyProgress entity."
-        },
-        "learnerId": {
-          "type": "string",
-          "description": "Reference to the LearnerProfile. (Relationship: LearnerProfile 1:N LearnerVocabularyProgress)"
-        },
-        "vocabularyItemId": {
-          "type": "string",
-          "description": "Reference to the VocabularyItem. (Relationship: VocabularyItem 1:N LearnerVocabularyProgress)"
-        },
-        "bestPronunciationScore": {
-          "type": "number",
-          "description": "The highest pronunciation assessment score achieved by the learner for this vocabulary item (0-100)."
-        },
-        "totalAttempts": {
-          "type": "number",
-          "description": "The total number of pronunciation attempts made by the learner for this item."
-        },
-        "successfulAttempts": {
-          "type": "number",
-          "description": "The count of attempts that met the success threshold for this vocabulary item."
-        },
-        "lastAttemptedAt": {
-          "type": "string",
-          "description": "Timestamp of the most recent pronunciation attempt for this item.",
-          "format": "date-time"
-        },
-        "isMastered": {
-          "type": "boolean",
-          "description": "Indicates if the learner has mastered this vocabulary item (e.g., consistently successful pronunciations)."
-        }
-      },
-      "required": [
-        "id",
-        "learnerId",
-        "vocabularyItemId",
-        "bestPronunciationScore",
-        "totalAttempts",
-        "successfulAttempts",
-        "lastAttemptedAt",
-        "isMastered"
-      ]
-    },
-    "GameSession": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "GameSession",
-      "type": "object",
-      "description": "Records details of a single interactive listening comprehension game session played by a learner.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the GameSession entity."
-        },
-        "learnerId": {
-          "type": "string",
-          "description": "Reference to the LearnerProfile who played the game. (Relationship: LearnerProfile 1:N GameSession)"
-        },
-        "lessonId": {
-          "type": "string",
-          "description": "Reference to the Lesson associated with this game session, if applicable. (Relationship: Lesson 1:N GameSession)"
-        },
-        "gameType": {
-          "type": "string",
-          "description": "The type of game played (e.g., 'ListeningComprehensionImageSelect')."
-        },
-        "startedAt": {
-          "type": "string",
-          "description": "Timestamp when the game session started.",
-          "format": "date-time"
-        },
-        "completedAt": {
-          "type": "string",
-          "description": "Timestamp when the game session was completed.",
-          "format": "date-time"
-        },
-        "score": {
-          "type": "number",
-          "description": "The total score achieved by the learner in this game session."
-        },
-        "correctAnswersCount": {
-          "type": "number",
-          "description": "The number of questions answered correctly during the session."
-        },
-        "totalQuestionsCount": {
-          "type": "number",
-          "description": "The total number of questions presented in the game session."
-        }
-      },
-      "required": [
-        "id",
-        "learnerId",
-        "gameType",
-        "startedAt",
-        "score",
-        "correctAnswersCount",
-        "totalQuestionsCount"
-      ]
-    },
-    "Achievement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Achievement",
-      "type": "object",
-      "description": "Defines a badge or reward that a learner can earn within the application.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Achievement entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the achievement (e.g., 'First Word Master', 'Lesson 1 Complete')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of what the achievement represents."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL to the image representing the achievement badge.",
-          "format": "uri"
-        },
-        "criteriaDescription": {
-          "type": "string",
-          "description": "A human-readable description of the criteria required to earn this achievement."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "imageUrl",
-        "criteriaDescription"
-      ]
-    },
-    "LearnerAchievement": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LearnerAchievement",
-      "type": "object",
-      "description": "Records when a specific learner has earned a particular achievement.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LearnerAchievement entity."
-        },
-        "learnerId": {
-          "type": "string",
-          "description": "Reference to the LearnerProfile who earned the achievement. (Relationship: LearnerProfile 1:N LearnerAchievement)"
-        },
-        "achievementId": {
-          "type": "string",
-          "description": "Reference to the Achievement that was earned. (Relationship: Achievement 1:N LearnerAchievement)"
-        },
-        "awardedAt": {
-          "type": "string",
-          "description": "Timestamp when the achievement was awarded to the learner.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "learnerId",
-        "achievementId",
-        "awardedAt"
-      ]
+      "required": ["id", "learnerId", "lessonId", "status", "starsEarned", "lastAccessedAt"]
     }
   },
   "auth": {
@@ -356,187 +181,26 @@
         "path": "/users/{userId}/learnerProfiles/{learnerProfileId}",
         "definition": {
           "entityName": "LearnerProfile",
-          "schema": {
-            "$ref": "#/backend/entities/LearnerProfile"
-          },
-          "description": "Represents a specific child learner's profile, owned by a parent/guardian (`userId`). The document ID (`learnerProfileId`) corresponds to the 'id' field within the LearnerProfile document. Authorization is based on the parent's Firebase UID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the parent/guardian who owns this learner profile."
-            },
-            {
-              "name": "learnerProfileId",
-              "description": "The unique identifier for the LearnerProfile, matching the 'id' field within the document."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/LearnerProfile" },
+          "description": "Root profile for a learner."
+        }
+      },
+      {
+        "path": "/users/{userId}/learnerProfiles/{learnerProfileId}/phrases/{phraseId}",
+        "definition": {
+          "entityName": "PhraseItem",
+          "schema": { "$ref": "#/backend/entities/PhraseItem" },
+          "description": "Custom phrases created by the learner via English-to-French translation."
         }
       },
       {
         "path": "/lessons/{lessonId}",
         "definition": {
           "entityName": "Lesson",
-          "schema": {
-            "$ref": "#/backend/entities/Lesson"
-          },
-          "description": "Contains static, publicly readable lesson content for all learners. Write access is restricted to administrators defined in '/roles_admin'.",
-          "params": [
-            {
-              "name": "lessonId",
-              "description": "The unique identifier for the Lesson, matching the 'id' field within the document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/lessons/{lessonId}/vocabularyItems/{vocabularyItemId}",
-        "definition": {
-          "entityName": "VocabularyItem",
-          "schema": {
-            "$ref": "#/backend/entities/VocabularyItem"
-          },
-          "description": "Contains static, publicly readable vocabulary items belonging to a specific lesson. Write access is restricted to administrators defined in '/roles_admin'.",
-          "params": [
-            {
-              "name": "lessonId",
-              "description": "The unique identifier of the parent Lesson."
-            },
-            {
-              "name": "vocabularyItemId",
-              "description": "The unique identifier for the VocabularyItem, matching the 'id' field within the document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/learnerProfiles/{learnerProfileId}/lessonProgresses/{lessonId}",
-        "definition": {
-          "entityName": "LearnerLessonProgress",
-          "schema": {
-            "$ref": "#/backend/entities/LearnerLessonProgress"
-          },
-          "description": "Tracks a specific learner's progress within a particular lesson. The document ID (`lessonId`) corresponds to the lesson being tracked. Includes denormalized 'learnerId' (matching '{learnerProfileId}' from the path) for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the parent/guardian who owns the learner profile."
-            },
-            {
-              "name": "learnerProfileId",
-              "description": "The unique identifier for the LearnerProfile this progress belongs to."
-            },
-            {
-              "name": "lessonId",
-              "description": "The unique identifier for the Lesson this progress is for, used as the document ID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/learnerProfiles/{learnerProfileId}/vocabularyProgresses/{vocabularyItemId}",
-        "definition": {
-          "entityName": "LearnerVocabularyProgress",
-          "schema": {
-            "$ref": "#/backend/entities/LearnerVocabularyProgress"
-          },
-          "description": "Tracks a specific learner's progress for a vocabulary item. The document ID (`vocabularyItemId`) corresponds to the vocabulary item being tracked. Includes denormalized 'learnerId' (matching '{learnerProfileId}' from the path) for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the parent/guardian who owns the learner profile."
-            },
-            {
-              "name": "learnerProfileId",
-              "description": "The unique identifier for the LearnerProfile this progress belongs to."
-            },
-            {
-              "name": "vocabularyItemId",
-              "description": "The unique identifier for the VocabularyItem this progress is for, used as the document ID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/learnerProfiles/{learnerProfileId}/gameSessions/{gameSessionId}",
-        "definition": {
-          "entityName": "GameSession",
-          "schema": {
-            "$ref": "#/backend/entities/GameSession"
-          },
-          "description": "Records details of a game session played by a specific learner. Includes denormalized 'learnerId' (matching '{learnerProfileId}' from the path) for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the parent/guardian who owns the learner profile."
-            },
-            {
-              "name": "learnerProfileId",
-              "description": "The unique identifier for the LearnerProfile that played this game session."
-            },
-            {
-              "name": "gameSessionId",
-              "description": "The unique identifier for the GameSession, matching the 'id' field within the document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/achievements/{achievementId}",
-        "definition": {
-          "entityName": "Achievement",
-          "schema": {
-            "$ref": "#/backend/entities/Achievement"
-          },
-          "description": "Defines static, publicly readable achievement badges. Write access is restricted to administrators defined in '/roles_admin'.",
-          "params": [
-            {
-              "name": "achievementId",
-              "description": "The unique identifier for the Achievement, matching the 'id' field within the document."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/learnerProfiles/{learnerProfileId}/achievements/{achievementId}",
-        "definition": {
-          "entityName": "LearnerAchievement",
-          "schema": {
-            "$ref": "#/backend/entities/LearnerAchievement"
-          },
-          "description": "Records when a specific learner has earned an achievement. The document ID (`achievementId`) corresponds to the achievement earned. Includes denormalized 'learnerId' (matching '{learnerProfileId}' from the path) for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the parent/guardian who owns the learner profile."
-            },
-            {
-              "name": "learnerProfileId",
-              "description": "The unique identifier for the LearnerProfile that earned this achievement."
-            },
-            {
-              "name": "achievementId",
-              "description": "The unique identifier for the Achievement that was earned, used as the document ID."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles_admin/{adminId}",
-        "definition": {
-          "entityName": "roles_admin",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Database-based Access Control (DBAC) collection. The existence of a document here (where 'adminId' is a user's UID) grants administrative privileges. Document content can be empty; existence implies role.",
-          "params": [
-            {
-              "name": "adminId",
-              "description": "The Firebase Authentication UID of a user granted administrative privileges."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/Lesson" },
+          "description": "Global lessons."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and clear Access Modeling to ensure security, scalability, and debuggability. All user-specific data is strictly segregated under the authenticated user's ID (`userId`) to enforce strong ownership. Static application content (lessons, vocabulary, achievements) is stored in global, publicly readable collections, with write access restricted to administrators.\n\n**Authorization Independence via Denormalization:**\n\n1.  **User-Owned Data:** For all data related to a child learner's profile and progress (`LearnerProfile`, `LearnerLessonProgress`, `LearnerVocabularyProgress`, `GameSession`, `LearnerAchievement`), the parent's Firebase `uid` (`userId`) is embedded directly in the path (`/users/{userId}/...`). This ensures that security rules can directly compare `request.auth.uid` with the `userId` in the path, eliminating the need for `get()` calls to determine ownership for the parent.\n2.  **Child-Specific Data:** Furthermore, within a parent's user space, each child's data is organized under their specific `learnerProfileId` (`/users/{userId}/learnerProfiles/{learnerProfileId}/...`). For subcollections like `lessonProgresses`, `vocabularyProgresses`, `gameSessions`, and `achievements`, the document's `learnerId` field (which corresponds to the `{learnerProfileId}` in the path) explicitly links it back to the specific child profile. This ensures that the authorization context (which child's data it is) is available within the document itself, even though the path already provides strong scoping. This redundant `learnerId` field within the document supports authorization independence by allowing rules to verify consistency (`request.resource.data.learnerId == learnerProfileId`) without traversing up the hierarchy with `get()` operations. This robust design guarantees that atomic operations (like creating a new child profile and its initial progress records) can be secured without complex, error-prone rule dependencies.\n\n**Support for Query-Aware Security Rules (QAPs):**\n\n1.  **Global Static Data:** Collections like `/lessons`, `/achievements`, and `/lessons/{lessonId}/vocabularyItems` are designed to be publicly readable (`allow read: if true;`). This inherently supports QAPs as clients can query these collections without requiring any specific `where` clauses for security. The rules are not acting as filters; they simply grant universal read access, allowing clients to fetch the entire collection or specific documents based on their query needs.\n2.  **User-Specific Data:** For user-owned collections (e.g., `/users/{userId}/learnerProfiles`, `/users/{userId}/learnerProfiles/{learnerProfileId}/lessonProgresses`), the path structure itself (`/users/{userId}/...`) acts as the primary security boundary. Rules will enforce `allow read: if request.auth.uid == userId;`. This design ensures QAPs because any query issued by an authenticated user to `/users/{request.auth.uid}/learnerProfiles` will only ever return data owned by that `userId`. The client side must construct the query with the `request.auth.uid` as part of the path, and the server-side rules validate that the requested path matches the authenticated user, thus guaranteeing that the rules are not filtering data but rather enforcing access to pre-filtered, owned segments of the database. This makes list queries efficient and secure.\n\n**DBAC (Database-Based Access Control):**\nAdministrative roles are managed through a dedicated collection, `/roles_admin/{adminId}`. The mere existence of a document at `/roles_admin/{request.auth.uid}` indicates administrative privileges. This avoids custom claims and centralizes role management within Firestore, simplifying rule logic for managing global content."
+    ]
   }
 }
