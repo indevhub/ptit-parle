@@ -17,16 +17,21 @@ const TranslatePhraseOutputSchema = z.object({
   englishText: z.string().describe('The original English phrase.'),
 });
 
+/**
+ * Translates a phrase using Gemini 1.5 Flash.
+ * Falls back to a simulated translation if the API key is missing or invalid.
+ */
 export async function translatePhrase(input: { englishText: string }) {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  // If the key is the placeholder or missing, trigger fallback
+  
+  // Detect if the key is the default placeholder or too short to be real
   const isPlaceholderKey = !apiKey || apiKey === 'your_actual_api_key_here' || apiKey.length < 10;
 
   if (isPlaceholderKey) {
-    console.warn('Genkit: No valid API key found. Using mock translation.');
-    // Friendly simulated translation for prototyping
+    console.warn('Genkit: No valid API key found. Using mock translation for demo.');
+    // Simulated translation that looks "magical" for the demo
     return {
-      frenchText: `${input.englishText} (en français ✨)`,
+      frenchText: `${input.englishText} ✨ (Traduction en cours...)`,
       englishText: input.englishText
     };
   }
@@ -40,16 +45,22 @@ export async function translatePhrase(input: { englishText: string }) {
       
       English Phrase: "${input.englishText}"`,
       output: { schema: TranslatePhraseOutputSchema },
+      config: {
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+        ]
+      }
     });
 
     if (!output) throw new Error('Translation failed: No output from model');
     return output;
   } catch (error: any) {
-    console.error('Genkit Translation Error:', error);
+    // If the API key is rejected (400) or quota hit, don't crash the app
+    console.error('Genkit Translation Error:', error.message);
     
-    // Fallback if the API call fails (e.g. invalid key or quota)
     return {
-      frenchText: `${input.englishText} [Traduction]`,
+      frenchText: `${input.englishText} [Mode Démo]`,
       englishText: input.englishText
     };
   }
