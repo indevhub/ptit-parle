@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview Flow to translate English phrases to simple French for children.
- * Includes a fallback mode for prototyping when an API key is not yet configured.
+ * Includes a robust fallback mode for prototyping when an API key is not yet configured.
  */
 
 import { ai } from '@/ai/genkit';
@@ -19,13 +19,14 @@ const TranslatePhraseOutputSchema = z.object({
 
 export async function translatePhrase(input: { englishText: string }) {
   const apiKey = process.env.GOOGLE_GENAI_API_KEY;
-  const isPlaceholderKey = !apiKey || apiKey.includes('your_actual_api_key');
+  // If the key is the placeholder or missing, trigger fallback
+  const isPlaceholderKey = !apiKey || apiKey === 'your_actual_api_key_here' || apiKey.length < 10;
 
   if (isPlaceholderKey) {
-    console.warn('Genkit: Using mock translation because GOOGLE_GENAI_API_KEY is not set.');
+    console.warn('Genkit: No valid API key found. Using mock translation.');
     // Simple mock translation for prototyping
     return {
-      frenchText: `${input.englishText} (en français)`,
+      frenchText: `${input.englishText} (en français ✨)`,
       englishText: input.englishText
     };
   }
@@ -33,8 +34,9 @@ export async function translatePhrase(input: { englishText: string }) {
   try {
     const { output } = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
-      prompt: `You are a friendly French tutor for children. Translate the following English phrase to simple, kid-friendly French. 
-      The translation should be grammatically correct but easy for a 5-year-old to say.
+      prompt: `You are a friendly, magical French tutor for children. 
+      Translate the following English phrase to simple, kid-friendly French. 
+      Keep it very simple so a 5-year-old can repeat it.
       
       English Phrase: "${input.englishText}"`,
       output: { schema: TranslatePhraseOutputSchema },
