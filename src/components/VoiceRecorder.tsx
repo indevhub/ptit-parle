@@ -1,10 +1,10 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Loader2, CheckCircle2, XCircle, Volume2 } from 'lucide-react';
+import { Mic, Square, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedText } from '@/components/TranslatedText';
 
 interface VoiceRecorderProps {
   targetPhrase: string;
@@ -12,7 +12,8 @@ interface VoiceRecorderProps {
 }
 
 interface SpeechFeedback {
-  feedback: string;
+  frFeedback: string;
+  enFeedback: string;
   isGoodPronunciation: boolean;
   transcript: string;
 }
@@ -25,7 +26,6 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initialize Web Speech API
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (SpeechRecognition) {
@@ -44,9 +44,12 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
         const result: SpeechFeedback = {
           transcript: event.results[0][0].transcript,
           isGoodPronunciation: isMatch,
-          feedback: isMatch 
+          frFeedback: isMatch 
             ? `Excellent ! Tu as dit : "${event.results[0][0].transcript}"` 
-            : `Pas tout à fait. J'ai entendu : "${event.results[0][0].transcript}". Essaie encore !`
+            : `Pas tout à fait. J'ai entendu : "${event.results[0][0].transcript}". Essaie encore !`,
+          enFeedback: isMatch
+            ? `Excellent! You said: "${event.results[0][0].transcript}"`
+            : `Not quite. I heard: "${event.results[0][0].transcript}". Try again!`
         };
 
         setFeedback(result);
@@ -58,13 +61,12 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
         setIsProcessing(false);
         setIsRecording(false);
         if (event.error === 'not-allowed') {
           toast({
             title: "Micro bloqué",
-            description: "Merci d'autoriser l'accès au micro dans votre navigateur.",
+            description: "Merci d'autoriser l'accès au micro.",
             variant: "destructive",
           });
         }
@@ -79,23 +81,13 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   }, [targetPhrase, onSuccess, toast]);
 
   const startRecording = () => {
-    if (!recognitionRef.current) {
-      toast({
-        title: "Navigateur non compatible",
-        description: "Votre navigateur ne supporte pas la reconnaissance vocale.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!recognitionRef.current) return;
     setFeedback(null);
     setIsRecording(true);
     setIsProcessing(false);
     try {
       recognitionRef.current.start();
-    } catch (e) {
-      // Recognition might already be started
-    }
+    } catch (e) {}
   };
 
   const stopRecording = () => {
@@ -130,12 +122,20 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
 
       {isRecording && (
         <div className="flex flex-col items-center gap-2">
-          <p className="text-sm font-bold text-destructive animate-bounce">On t'écoute...</p>
-          <p className="text-xs text-muted-foreground italic">Dis "{targetPhrase}"</p>
+          <p className="text-sm font-bold text-destructive animate-bounce">
+            <TranslatedText fr="On t'écoute..." en="Listening..." />
+          </p>
+          <p className="text-xs text-muted-foreground italic">
+            <TranslatedText fr={`Dis "${targetPhrase}"`} en={`Say "${targetPhrase}"`} />
+          </p>
         </div>
       )}
 
-      {isProcessing && <p className="text-sm font-medium text-primary">Analyse en cours...</p>}
+      {isProcessing && (
+        <p className="text-sm font-medium text-primary">
+          <TranslatedText fr="Analyse en cours..." en="Analyzing..." />
+        </p>
+      )}
 
       {feedback && (
         <div className={`flex flex-col items-center text-center p-4 rounded-2xl w-full animate-in fade-in zoom-in duration-300 ${feedback.isGoodPronunciation ? 'bg-green-100' : 'bg-orange-100'}`}>
@@ -146,10 +146,15 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
               <XCircle className="h-6 w-6 text-orange-600" />
             )}
             <span className={`font-bold ${feedback.isGoodPronunciation ? 'text-green-700' : 'text-orange-700'}`}>
-              {feedback.isGoodPronunciation ? 'Bravo !' : 'Encore un petit effort'}
+              <TranslatedText 
+                fr={feedback.isGoodPronunciation ? 'Bravo !' : 'Encore un petit effort'} 
+                en={feedback.isGoodPronunciation ? 'Well done!' : 'Keep trying!'} 
+              />
             </span>
           </div>
-          <p className="text-sm text-foreground/80 mb-1">{feedback.feedback}</p>
+          <p className="text-sm text-foreground/80 mb-1">
+            <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
+          </p>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export default function ListeningGamePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -61,13 +62,19 @@ export default function ListeningGamePage() {
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-6">
         <div className="bg-primary/20 p-8 rounded-[3rem] card-shadow">
           <PartyPopper className="h-20 w-20 text-primary mx-auto mb-4" />
-          <h1 className="text-4xl font-bold text-primary mb-2">Félicitations !</h1>
-          <p className="text-lg text-muted-foreground mb-6">Tu as terminé le défi d'écoute avec brio.</p>
+          <h1 className="text-4xl font-bold text-primary mb-2">
+            <TranslatedText fr="Félicitations !" en="Congratulations!" />
+          </h1>
+          <p className="text-lg text-muted-foreground mb-6">
+            <TranslatedText fr="Tu as terminé le défi d'écoute avec brio." en="You finished the listening challenge brilliantly." />
+          </p>
           <Button onClick={() => { setScore(0); setGameState('playing'); startNewRound(); }} className="rounded-full px-8 py-6 h-auto text-xl bg-primary hover:bg-primary/90 child-button">
-            Rejouer
+            <TranslatedText fr="Rejouer" en="Play Again" />
           </Button>
         </div>
-        <Link href="/dashboard" className="text-primary font-bold hover:underline">Retour à l'accueil</Link>
+        <Link href="/dashboard" className="text-primary font-bold hover:underline">
+          <TranslatedText fr="Retour à l'accueil" en="Back to Home" />
+        </Link>
       </div>
     );
   }
@@ -89,7 +96,9 @@ export default function ListeningGamePage() {
 
         <main className="flex-1 space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">Écoute et choisis l'image !</h2>
+            <h2 className="text-2xl font-bold">
+              <TranslatedText fr="Écoute et choisis l'image !" en="Listen and choose the image!" />
+            </h2>
             {targetWord && <AudioPlayer text={targetWord.french} />}
           </div>
 

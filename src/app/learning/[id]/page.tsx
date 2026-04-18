@@ -5,18 +5,16 @@ import { Navigation } from '@/components/Navigation';
 import { VOCABULARY } from '@/app/data/lessons';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { notFound } from 'next/navigation';
-import { useTranslation } from '@/context/TranslationContext';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
-  const { showEnglish } = useTranslation();
 
   if (!word) {
     return notFound();
@@ -33,12 +31,9 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
           <Link href="/dashboard" className="p-3 bg-white rounded-2xl card-shadow child-button">
             <ChevronLeft className="h-6 w-6 text-primary" />
           </Link>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <h1 className="text-xl font-bold text-primary cursor-help">Leçon de Français</h1>
-            </TooltipTrigger>
-            <TooltipContent>French Lesson</TooltipContent>
-          </Tooltip>
+          <h1 className="text-xl font-bold text-primary">
+            <TranslatedText fr="Leçon de Français" en="French Lesson" />
+          </h1>
           <div className="p-3 bg-white rounded-2xl card-shadow">
             <Info className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -55,41 +50,26 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute bottom-8 left-0 right-0 text-center">
-               <p className="text-white text-lg font-medium opacity-90">{word.english}</p>
-               <Tooltip>
-                 <TooltipTrigger asChild>
-                   <h2 className="text-white text-5xl font-bold cursor-help">{word.french}</h2>
-                 </TooltipTrigger>
-                 <TooltipContent>{word.english}</TooltipContent>
-               </Tooltip>
-               {showEnglish && (
-                 <p className="text-white/90 text-2xl font-bold mt-2 animate-in fade-in slide-in-from-bottom-2">
-                   {word.english}
-                 </p>
-               )}
+               <h2 className="text-white text-5xl font-bold">
+                 <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+               </h2>
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-8">
             <div className="flex flex-col items-center gap-4">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="font-bold text-primary uppercase tracking-widest text-sm cursor-help">1. Écoute</p>
-                </TooltipTrigger>
-                <TooltipContent>1. Listen</TooltipContent>
-              </Tooltip>
+              <p className="font-bold text-primary uppercase tracking-widest text-sm">
+                <TranslatedText fr="1. Écoute" en="1. Listen" inline />
+              </p>
               <AudioPlayer text={word.french} />
             </div>
 
             <div className="w-full h-px bg-border max-w-[100px]" />
 
             <div className="flex flex-col items-center gap-4 w-full">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="font-bold text-primary uppercase tracking-widest text-sm cursor-help">2. Répète</p>
-                </TooltipTrigger>
-                <TooltipContent>2. Repeat</TooltipContent>
-              </Tooltip>
+              <p className="font-bold text-primary uppercase tracking-widest text-sm">
+                <TranslatedText fr="2. Répète" en="2. Repeat" inline />
+              </p>
               <VoiceRecorder targetPhrase={word.french} onSuccess={() => console.log('Achievement Unlocked!')} />
             </div>
           </div>

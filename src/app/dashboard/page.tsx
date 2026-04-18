@@ -6,12 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Star, Trophy, Sparkles, Languages } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useTranslation } from '@/context/TranslationContext';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export default function DashboardPage() {
   const [progress] = useState({ stars: 12, total: VOCABULARY.length, learned: 3 });
@@ -26,18 +26,12 @@ export default function DashboardPage() {
       <header className="p-6 md:p-10 bg-white card-shadow rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto flex items-center justify-between">
           <div className="flex-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h1 className="text-3xl font-bold text-primary mb-1 cursor-help">Salut, Explorateur ! 👋</h1>
-              </TooltipTrigger>
-              <TooltipContent>Hi, Explorer!</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className="text-muted-foreground font-medium cursor-help">Prêt pour une nouvelle aventure ?</p>
-              </TooltipTrigger>
-              <TooltipContent>Ready for a new adventure?</TooltipContent>
-            </Tooltip>
+            <h1 className="text-3xl font-bold text-primary mb-1">
+              <TranslatedText fr="Salut, Explorateur ! 👋" en="Hi, Explorer! 👋" />
+            </h1>
+            <p className="text-muted-foreground font-medium">
+              <TranslatedText fr="Prêt pour une nouvelle aventure ?" en="Ready for a new adventure?" />
+            </p>
           </div>
           <div className="flex items-center gap-3">
              <Button 
@@ -59,16 +53,13 @@ export default function DashboardPage() {
       <main className="max-w-screen-md mx-auto p-6 space-y-8">
         <section>
           <div className="flex items-center justify-between mb-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h2 className="text-xl font-bold flex items-center gap-2 cursor-help">
-                  <Sparkles className="h-5 w-5 text-accent" />
-                  Ton Progrès
-                </h2>
-              </TooltipTrigger>
-              <TooltipContent>Your Progress</TooltipContent>
-            </Tooltip>
-            <span className="text-sm font-bold text-muted-foreground">{progress.learned}/{progress.total} mots</span>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-accent" />
+              <TranslatedText fr="Ton Progrès" en="Your Progress" />
+            </h2>
+            <span className="text-sm font-bold text-muted-foreground">
+              {progress.learned}/{progress.total} <TranslatedText fr="mots" en="words" inline />
+            </span>
           </div>
           <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden">
             <CardContent className="p-6">
@@ -87,12 +78,9 @@ export default function DashboardPage() {
         </section>
 
         <section>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <h2 className="text-xl font-bold mb-4 cursor-help">Continuer l'Apprentissage</h2>
-            </TooltipTrigger>
-            <TooltipContent>Continue Learning</TooltipContent>
-          </Tooltip>
+          <h2 className="text-xl font-bold mb-4">
+            <TranslatedText fr="Continuer l'Apprentissage" en="Continue Learning" />
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {VOCABULARY.slice(3, 5).map((word) => (
               <Link key={word.id} href={`/learning/${word.id}`}>
@@ -107,15 +95,10 @@ export default function DashboardPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-4 left-4">
-                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-1">{word.english}</p>
                       <div className="flex flex-col">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <h3 className="text-white text-2xl font-bold cursor-help">{word.french}</h3>
-                          </TooltipTrigger>
-                          <TooltipContent>{word.english}</TooltipContent>
-                        </Tooltip>
-                        {showEnglish && <p className="text-white/80 text-sm font-medium">{word.english}</p>}
+                        <h3 className="text-white text-2xl font-bold">
+                          <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+                        </h3>
                       </div>
                     </div>
                   </div>
@@ -126,22 +109,19 @@ export default function DashboardPage() {
         </section>
 
         <section>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="bg-accent/10 p-6 rounded-[2rem] flex items-center gap-6 cursor-help">
-                <div className="bg-accent h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0">
-                   <Trophy className="h-10 w-10 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-accent">Défi du jour !</h3>
-                  <p className="text-sm text-foreground/70">Apprends 3 nouveaux mots aujourd'hui pour gagner un badge spécial.</p>
-                </div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-center">
-              Daily Challenge! Learn 3 new words today to earn a special badge.
-            </TooltipContent>
-          </Tooltip>
+          <div className="bg-accent/10 p-6 rounded-[2rem] flex items-center gap-6">
+            <div className="bg-accent h-16 w-16 rounded-2xl flex items-center justify-center flex-shrink-0">
+               <Trophy className="h-10 w-10 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-accent">
+                <TranslatedText fr="Défi du jour !" en="Daily Challenge!" />
+              </h3>
+              <p className="text-sm text-foreground/70">
+                <TranslatedText fr="Apprends 3 nouveaux mots aujourd'hui pour gagner un badge spécial." en="Learn 3 new words today to earn a special badge." />
+              </p>
+            </div>
+          </div>
         </section>
       </main>
 
