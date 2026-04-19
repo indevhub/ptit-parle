@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use } from 'react';
@@ -27,6 +28,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   }
 
   // CRITICAL: We MUST stay in loading state if auth session is still initializing
+  // This prevents the page from flashing "notFound" before the user is ready.
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">

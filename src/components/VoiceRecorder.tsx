@@ -139,34 +139,34 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       {(isRecording || feedback || isProcessing) && (
         <div className="text-center min-h-[4rem] animate-in zoom-in duration-300 px-6 w-full">
           {isRecording && (
-            <div className="text-lg font-bold text-destructive animate-pulse uppercase tracking-widest bg-destructive/10 py-2 rounded-2xl">
+            <div className="text-xl md:text-2xl font-bold text-destructive animate-pulse uppercase tracking-widest bg-destructive/10 py-3 rounded-2xl">
               On t'écoute...
             </div>
           )}
           {isProcessing && (
-            <div className="text-lg font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="text-xl md:text-2xl font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
               Analyse en cours...
             </div>
           )}
           {feedback && (
-            <div className="space-y-4">
-              <div className={`flex flex-col items-center gap-2 ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
+            <div className="space-y-6">
+              <div className={`flex flex-col items-center gap-4 ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
                 {feedback.isGoodPronunciation ? (
-                   <CheckCircle2 className="h-10 w-10 animate-bounce" />
+                   <CheckCircle2 className="h-16 w-16 animate-bounce" />
                 ) : (
-                   <XCircle className="h-10 w-10" />
+                   <XCircle className="h-16 w-16" />
                 )}
-                <div className="text-3xl md:text-4xl font-bold tracking-tight">
+                <div className="text-4xl md:text-5xl font-extrabold tracking-tighter leading-none">
                   <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
                 </div>
               </div>
               {feedback.transcript && (
-                <div className="bg-white/50 p-4 rounded-3xl border-2 border-dashed border-muted">
-                  <div className="text-muted-foreground text-sm uppercase font-bold tracking-widest mb-1">
+                <div className="bg-white/60 p-6 rounded-[2.5rem] border-2 border-dashed border-muted shadow-inner">
+                  <div className="text-muted-foreground text-xs uppercase font-bold tracking-widest mb-2 opacity-60">
                     <TranslatedText fr="Tu as dit :" en="You said:" inline />
                   </div>
-                  <div className="text-2xl font-bold text-primary italic">
+                  <div className="text-3xl md:text-4xl font-bold text-primary italic leading-tight">
                     "{feedback.transcript}"
                   </div>
                 </div>

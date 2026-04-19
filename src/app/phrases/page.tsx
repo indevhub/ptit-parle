@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -15,12 +16,14 @@ import { EnglishVoiceRecorder } from '@/components/EnglishVoiceRecorder';
 import { useToast } from '@/hooks/use-toast';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
+import { useTranslation } from '@/context/TranslationContext';
 
 export default function PhrasesPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isTranslating, setIsTranslating] = useState(false);
   const { toast } = useToast();
+  const { showEnglish } = useTranslation();
 
   const phrasesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -50,15 +53,15 @@ export default function PhrasesPage() {
       }, { merge: true });
 
       toast({
-        title: "Phrase ajoutée !",
-        description: "Ta nouvelle phrase magique est prête à être apprise.",
+        title: showEnglish ? "Phrase ajoutée ! (Phrase added!)" : "Phrase ajoutée !",
+        description: showEnglish ? "Ta nouvelle phrase magique est prête à être apprise. (Your new magic phrase is ready to learn.)" : "Ta nouvelle phrase magique est prête à être apprise.",
       });
     } catch (error: any) {
       console.error('Translation Error:', error);
       toast({
         variant: "destructive",
-        title: "Erreur de traduction",
-        description: error.message || "Désolé, la magie n'a pas fonctionné cette fois. Vérifie ta configuration API.",
+        title: showEnglish ? "Erreur de traduction (Translation Error)" : "Erreur de traduction",
+        description: error.message || (showEnglish ? "Désolé, la magie n'a pas fonctionné. (Sorry, the magic didn't work.)" : "Désolé, la magie n'a pas fonctionné."),
       });
     } finally {
       setIsTranslating(false);
@@ -100,7 +103,9 @@ export default function PhrasesPage() {
               {isTranslating ? (
                 <div className="flex flex-col items-center gap-2 text-accent">
                   <Loader2 className="h-10 w-10 animate-spin" />
-                  <span className="font-bold">Traduction magique...</span>
+                  <span className="font-bold">
+                    <TranslatedText fr="Traduction magique..." en="Magic translation..." inline />
+                  </span>
                 </div>
               ) : (
                 <EnglishVoiceRecorder onFinished={handleAddPhrase} />
@@ -151,14 +156,17 @@ export default function PhrasesPage() {
                     </div>
                   </div>
 
-                  {/* Practicing tools directly on the card */}
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-muted/50 items-start">
                     <div className="flex flex-col items-center gap-2">
-                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Écoute</span>
+                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                         <TranslatedText fr="Écoute" en="Listen" inline />
+                       </span>
                        <AudioPlayer text={phrase.frenchText} />
                     </div>
                     <div className="flex flex-col items-center gap-2 border-l border-muted/50">
-                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Répète</span>
+                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                         <TranslatedText fr="Répète" en="Repeat" inline />
+                       </span>
                        <VoiceRecorder targetPhrase={phrase.frenchText} onSuccess={() => handleSuccess(phrase.id)} />
                     </div>
                   </div>

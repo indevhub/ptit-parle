@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use } from 'react';
@@ -25,7 +26,7 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
   // CRITICAL: We MUST stay in loading state if user auth OR data fetch is still active.
-  // We only proceed if isUserLoading and isLoading are both false.
+  // We only proceed if isUserLoading and isLoading are both false, and we have a ref attempt.
   if (isUserLoading || isLoading || !phraseRef) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">

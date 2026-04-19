@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useTranslation } from '@/context/TranslationContext';
 
 export default function ListeningGamePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -20,6 +21,7 @@ export default function ListeningGamePage() {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
   const { toast } = useToast();
+  const { showEnglish } = useTranslation();
 
   const startNewRound = () => {
     const shuffled = [...VOCABULARY].sort(() => 0.5 - Math.random());
@@ -37,8 +39,8 @@ export default function ListeningGamePage() {
     if (wordId === targetWord?.id) {
       setScore(s => s + 1);
       toast({
-        title: "Magnifique !",
-        description: "Tu as trouvé le bon mot !",
+        title: showEnglish ? "Magnifique ! (Magnificent!)" : "Magnifique !",
+        description: showEnglish ? "Tu as trouvé le bon mot ! (You found the right word!)" : "Tu as trouvé le bon mot !",
       });
       if (score >= 4) {
         setGameState('won');
@@ -47,8 +49,8 @@ export default function ListeningGamePage() {
       }
     } else {
       toast({
-        title: "Oups !",
-        description: "Essaie encore, tu peux le faire !",
+        title: showEnglish ? "Oups ! (Oops!)" : "Oups !",
+        description: showEnglish ? "Essaie encore, tu peux le faire ! (Try again, you can do it!)" : "Essaie encore, tu peux le faire !",
         variant: "destructive",
       });
     }
@@ -120,6 +122,7 @@ export default function ListeningGamePage() {
                     src={imgData.url}
                     alt={word.english}
                     fill
+                    sizes="(max-width: 768px) 50vw, 400px"
                     className="object-cover group-hover:scale-105 transition-transform"
                     data-ai-hint={imgData.hint}
                   />
