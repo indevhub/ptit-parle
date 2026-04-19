@@ -1,0 +1,58 @@
+"use client"
+
+import React from 'react';
+import { Languages, Star, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/context/TranslationContext';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import Link from 'next/link';
+
+export function TopNav() {
+  const { toggleEnglish, showEnglish } = useTranslation();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner');
+  }, [firestore, user]);
+
+  const { data: profile } = useDoc(profileRef);
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b z-[60] px-4 md:px-6 transition-all duration-300">
+      <div className="max-w-screen-md mx-auto h-full flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-2 group">
+          <div className="bg-primary rounded-lg p-1.5 transition-transform group-hover:rotate-12">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <span className="font-bold text-primary text-lg md:text-xl tracking-tight">P'tit Parlé</span>
+        </Link>
+
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Star Counter */}
+          {user && (
+            <div className="bg-yellow-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-yellow-200 animate-in zoom-in duration-500">
+              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+              <span className="font-bold text-yellow-700 text-sm">{profile?.totalStarsEarned || 0}</span>
+            </div>
+          )}
+
+          {/* Translation Toggle */}
+          <Button 
+            variant={showEnglish ? "default" : "outline"}
+            size="sm" 
+            onClick={toggleEnglish}
+            className="rounded-full gap-2 font-bold transition-all shadow-sm border-2"
+          >
+            <Languages className="h-4 w-4" />
+            <span className="hidden sm:inline text-[10px] md:text-xs">
+              {showEnglish ? "FR + EN" : "FR ONLY"}
+            </span>
+          </Button>
+        </div>
+      </div>
+    </nav>
+  );
+}

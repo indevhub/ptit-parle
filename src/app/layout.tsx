@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TranslationProvider } from '@/context/TranslationContext';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { TopNav } from '@/components/TopNav';
 
 export const metadata: Metadata = {
   title: "P'tit Parlé - Apprends le français en t'amusant",
@@ -26,7 +27,10 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <TooltipProvider>
             <TranslationProvider>
-              {children}
+              <TopNav />
+              <div className="pt-16">
+                {children}
+              </div>
               <Toaster />
             </TranslationProvider>
           </TooltipProvider>
