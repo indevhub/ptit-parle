@@ -60,7 +60,7 @@ export default function HuntrixPage() {
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Huntrix Voice Error:', event.error);
+        // Removed console.error to prevent Next.js error overlays for non-fatal errors like 'no-speech'
         if (event.error === 'not-allowed') {
           toast({
             variant: "destructive",

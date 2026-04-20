@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useTranslation } from '@/context/TranslationContext';
@@ -26,7 +27,7 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
     <span className={cn("flex flex-col", className)}>
       <span>{fr}</span>
       {showEnglish && (
-        <span className={cn("text-[0.85em] leading-tight font-medium animate-in fade-in slide-in-from-top-1", enClassName)}>
+        <span className={cn("text-[0.85em] leading-tight font-medium animate-in fade-in slide-in-from-top-1 opacity-100", enClassName)}>
           {en}
         </span>
       )}

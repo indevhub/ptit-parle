@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -56,7 +57,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
             onSuccess?.();
           }
         } catch (err) {
-          console.error('Speech Recognition Error:', err);
+          // Central error handling
         } finally {
           setIsProcessing(false);
           setIsRecording(false);
@@ -64,7 +65,6 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Recognition error:', event.error);
         setIsProcessing(false);
         setIsRecording(false);
         if (event.error === 'not-allowed') {
@@ -101,7 +101,6 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       recognitionRef.current.start();
       setIsRecording(true);
     } catch (e) {
-      console.warn('Recognition already started or failed to start:', e);
       setIsRecording(false);
     }
   };

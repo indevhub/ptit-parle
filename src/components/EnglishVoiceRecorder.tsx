@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -33,7 +34,6 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
       };
 
       recognition.onerror = (event: any) => {
-        console.error('English recognition error:', event.error);
         setIsRecording(false);
       };
       
