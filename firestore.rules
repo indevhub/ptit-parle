@@ -1,6 +1,6 @@
 
-// LAST UPDATED: 2026-04-20T05:30:00Z - FORCING RE-DEPLOYMENT TO FIX CONSOLE SYNC
-// If you still see permission errors, COPY THIS ENTIRE FILE into the Rules tab in the Firebase Console.
+// VERSION: 2026-04-20T06:00:00Z - FORCING RE-DEPLOYMENT
+// IF YOU SEE PERMISSION ERRORS, MANUALLY COPY THIS ENTIRE FILE INTO THE FIREBASE CONSOLE.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -11,27 +11,24 @@ service cloud.firestore {
     
     // Explicit rules for family accounts and their sub-data
     match /users/{userId} {
-      // Allow a family full access to their own account document
+      // Allow a family full access to their own account document and all nested data
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       
-      // Allow a family full access to all nested learner profiles, custom images, etc.
       match /{allSubcollections=**} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
     }
 
-    // Lessons and vocabulary reference data (Read-Only for everyone)
+    // Reference data (Lessons, achievements, etc.) is Read-Only for everyone
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if false;
-      
       match /{allSubcollections=**} {
         allow read: if true;
         allow write: if false;
       }
     }
 
-    // Achievement reference data (Read-Only for everyone)
     match /achievements/{id} {
       allow read: if true;
       allow write: if false;

@@ -26,11 +26,11 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     /**
-     * Using Imagen 3 which is the standard high-quality image generator 
-     * available in the Google AI Free Tier.
+     * Using Imagen 4 (Fast) as specified in the Genkit instructions.
+     * This is a high-performance model for text-to-image generation.
      */
     const response = await ai.generate({
-      model: googleAI.model('imagen-3.0-generate-001'),
+      model: 'googleai/imagen-4.0-fast-generate-001',
       prompt: `Generate a cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
     });
 
