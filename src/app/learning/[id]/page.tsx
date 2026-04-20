@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use } from 'react';
@@ -21,18 +22,20 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
+  // If word is not in static data, it truly doesn't exist
   if (!word) {
     return notFound();
   }
 
+  // Loading state for user session
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-sm font-bold text-primary/60 uppercase tracking-widest animate-pulse">
-            Préparation...
-          </p>
+        <div className="flex flex-col items-center gap-6">
+          <Loader2 className="h-16 w-16 text-primary animate-spin" />
+          <div className="text-xl font-black text-primary animate-pulse tracking-widest uppercase">
+            <TranslatedText fr="Chargement Magique..." en="Magic Loading..." inline />
+          </div>
         </div>
       </div>
     );
@@ -75,19 +78,19 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
     <div className="pb-24 min-h-screen bg-[#FDF6F8]">
       <div className="max-w-screen-md mx-auto p-6 flex flex-col h-full">
         <header className="flex items-center justify-between mb-8">
-          <Link href="/dashboard" className="p-3 bg-white rounded-2xl card-shadow child-button">
+          <Link href="/learning" className="p-3 bg-white rounded-2xl shadow-lg child-button">
             <ChevronLeft className="h-6 w-6 text-primary" />
           </Link>
-          <div className="text-xl font-bold text-primary">
-            <TranslatedText fr="Leçon de Français" en="French Lesson" />
+          <div className="text-xl font-black text-primary uppercase tracking-widest">
+            <TranslatedText fr="Leçon Magique" en="Magic Lesson" />
           </div>
-          <div className="p-3 bg-white rounded-2xl card-shadow">
-            <Info className="h-6 w-6 text-muted-foreground" />
+          <div className="p-3 bg-white rounded-2xl shadow-lg opacity-0">
+            <Info className="h-6 w-6" />
           </div>
         </header>
 
         <main className="flex-1 space-y-8">
-          <div className="relative aspect-square w-full rounded-[3rem] overflow-hidden card-shadow bg-white">
+          <div className="relative aspect-square w-full rounded-[3.5rem] overflow-hidden shadow-2xl bg-white border-8 border-white">
             <Image
               src={imgData.url}
               alt={word.french}
@@ -97,37 +100,37 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
               sizes="(max-width: 768px) 100vw, 600px"
               data-ai-hint={imgData.hint}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-8 left-0 right-0 text-center">
-               <div className="text-white text-5xl font-bold px-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="absolute bottom-10 left-0 right-0 text-center">
+               <div className="text-white text-5xl md:text-7xl font-black px-4 drop-shadow-xl">
                  <TranslatedText fr={word.french} en={word.english} enClassName="text-white" />
                </div>
             </div>
           </div>
 
-          <div className="bg-white/80 rounded-[3rem] p-8 card-shadow space-y-12">
-            <div className="flex flex-col items-center gap-6">
+          <div className="bg-white rounded-[3.5rem] p-10 shadow-2xl space-y-12">
+            <div className="flex flex-col items-center gap-10">
               <div className="flex flex-col items-center gap-4">
-                <div className="font-bold text-primary uppercase tracking-widest text-xs bg-primary/10 px-4 py-1 rounded-full">
+                <div className="font-black text-primary uppercase tracking-[0.2em] text-xs bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
                   <TranslatedText fr="1. Écoute" en="1. Listen" inline />
                 </div>
                 <AudioPlayer text={word.french} />
               </div>
 
-              <div className="w-full h-px bg-border max-w-[150px]" />
+              <div className="w-full h-1 bg-gradient-to-r from-transparent via-border to-transparent max-w-[200px]" />
 
               <div className="flex flex-col items-center gap-4 w-full">
-                <div className="font-bold text-primary uppercase tracking-widest text-xs bg-primary/10 px-4 py-1 rounded-full">
+                <div className="font-black text-primary uppercase tracking-[0.2em] text-xs bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
                   <TranslatedText fr="2. Répète" en="2. Repeat" inline />
                 </div>
                 <VoiceRecorder targetPhrase={word.french} onSuccess={handlePronunciationSuccess} />
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 pt-4">
-               <div className="bg-yellow-100 p-4 rounded-3xl flex items-center gap-3">
-                 <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
-                 <span className="font-bold text-yellow-700 text-sm">
+            <div className="flex items-center justify-center gap-2 pt-6">
+               <div className="bg-yellow-100 p-6 rounded-[2.5rem] flex items-center gap-4 shadow-inner border-2 border-yellow-200">
+                 <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                 <span className="font-black text-yellow-700 text-lg uppercase tracking-widest">
                    <TranslatedText fr="Gagne 1 étoile !" en="Earn 1 star!" inline />
                  </span>
                </div>
