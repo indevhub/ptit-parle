@@ -1,30 +1,56 @@
 
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Mic, Square, Loader2, CheckCircle2, XCircle, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
+import { cn } from '@/lib/utils';
 
 interface VoiceRecorderProps {
   targetPhrase: string;
   onSuccess?: () => void;
 }
 
-interface SpeechFeedback {
-  frFeedback: string;
-  enFeedback: string;
-  isGoodPronunciation: boolean;
-  transcript: string;
+interface WordStatus {
+  word: string;
+  isCorrect: boolean | null;
 }
 
 export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [feedback, setFeedback] = useState<SpeechFeedback | null>(null);
+  const [wordStatuses, setWordStatuses] = useState<WordStatus[]>([]);
+  const [overallSuccess, setOverallSuccess] = useState<boolean | null>(null);
+  const [transcript, setTranscript] = useState<string>('');
+  
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+
+  // Initialize word statuses from targetPhrase
+  const targetWords = useMemo(() => {
+    return targetPhrase.split(/\s+/).map(word => ({
+      original: word,
+      clean: word.toLowerCase().replace(/[.,!?;:]/g, "").trim()
+    }));
+  }, [targetPhrase]);
+
+  useEffect(() => {
+    setWordStatuses(targetWords.map(w => ({ word: w.original, isCorrect: null })));
+    setOverallSuccess(null);
+    setTranscript('');
+  }, [targetWords]);
+
+  const playWord = (word: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 0.8;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -38,23 +64,35 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       recognition.onresult = (event: any) => {
         setIsProcessing(true);
         try {
-          const transcript = event.results[0][0].transcript;
-          const transcriptLower = transcript.toLowerCase().replace(/[.,!?;:]/g, "").trim();
-          const targetLower = targetPhrase.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+          const userTranscript = event.results[0][0].transcript;
+          setTranscript(userTranscript);
+          const transcriptWords = userTranscript.toLowerCase().replace(/[.,!?;:]/g, "").split(/\s+/);
 
-          // Lenient matching for kids: if it contains the word or is very close
-          const isMatch = targetLower.length > 0 && (transcriptLower.includes(targetLower) || targetLower.includes(transcriptLower));
-          
-          const result: SpeechFeedback = {
-            transcript: transcript,
-            isGoodPronunciation: isMatch,
-            frFeedback: isMatch ? `Magnifique !` : `Presque ! Essaie encore.`,
-            enFeedback: isMatch ? `Magnificent!` : `Almost! Try again.`
-          };
+          const newStatuses = targetWords.map(target => {
+            // Check if the cleaned target word exists in the transcript words
+            const isMatch = transcriptWords.some(tw => tw === target.clean || tw.includes(target.clean) || target.clean.includes(tw));
+            return {
+              word: target.original,
+              isCorrect: isMatch
+            };
+          });
 
-          setFeedback(result);
-          if (isMatch) {
+          const allCorrect = newStatuses.every(s => s.isCorrect);
+          setWordStatuses(newStatuses);
+          setOverallSuccess(allCorrect);
+
+          if (allCorrect) {
             onSuccess?.();
+            toast({
+              title: <TranslatedText fr="Parfait !" en="Perfect!" inline />,
+              description: <TranslatedText fr="Tu as bien prononcé chaque mot." en="You pronounced every word correctly." inline />,
+            });
+          } else {
+            toast({
+              title: <TranslatedText fr="Presque !" en="Almost!" inline />,
+              description: <TranslatedText fr="Certains mots ont besoin d'encore un peu de magie." en="Some words need a bit more magic." inline />,
+              variant: "destructive",
+            });
           }
         } catch (err) {
           // Errors handled by central emitter
@@ -88,7 +126,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
         recognitionRef.current.stop();
       }
     };
-  }, [targetPhrase, onSuccess, toast, isRecording]);
+  }, [targetWords, onSuccess, toast, isRecording]);
 
   const startRecording = () => {
     if (!recognitionRef.current) {
@@ -98,7 +136,8 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
       });
       return;
     }
-    setFeedback(null);
+    setOverallSuccess(null);
+    setWordStatuses(targetWords.map(w => ({ word: w.original, isCorrect: null })));
     setIsProcessing(false);
     try {
       recognitionRef.current.start();
@@ -115,63 +154,90 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full py-4">
+    <div className="flex flex-col items-center gap-8 w-full py-4">
+      {/* Target Phrase Display with Clickable Words */}
+      <div className="flex flex-wrap justify-center gap-3 max-w-lg">
+        {wordStatuses.map((item, idx) => (
+          <button
+            key={idx}
+            onClick={() => playWord(item.word)}
+            className={cn(
+              "px-4 py-2 rounded-2xl text-xl md:text-2xl font-black transition-all transform hover:scale-110 active:scale-95 shadow-sm border-b-4",
+              item.isCorrect === true ? "bg-green-100 text-green-700 border-green-500" :
+              item.isCorrect === false ? "bg-orange-100 text-orange-700 border-orange-500" :
+              "bg-white text-primary border-primary/20 hover:border-primary/50"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              {item.word}
+              <Volume2 className="h-4 w-4 opacity-30" />
+            </div>
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center justify-center">
         {!isRecording ? (
           <Button
             onClick={startRecording}
             disabled={isProcessing}
             size="lg"
-            className="rounded-full h-20 w-20 bg-primary hover:bg-primary/90 child-button p-0 shadow-xl border-4 border-white"
+            className="rounded-full h-24 w-24 bg-primary hover:bg-primary/90 child-button p-0 shadow-2xl border-4 border-white"
           >
-            {isProcessing ? <Loader2 className="h-10 w-10 animate-spin" /> : <Mic className="h-10 w-10" />}
+            {isProcessing ? <Loader2 className="h-12 w-12 animate-spin" /> : <Mic className="h-12 w-12" />}
           </Button>
         ) : (
           <Button
             onClick={stopRecording}
             size="lg"
-            className="rounded-full h-20 w-20 bg-destructive hover:bg-destructive/90 child-button animate-pulse p-0 shadow-2xl border-4 border-white"
+            className="rounded-full h-24 w-24 bg-destructive hover:bg-destructive/90 child-button animate-pulse p-0 shadow-2xl border-4 border-white"
           >
-            <Square className="h-10 w-10" />
+            <Square className="h-12 w-12" />
           </Button>
         )}
       </div>
 
-      {(isRecording || feedback || isProcessing) && (
-        <div className="text-center min-h-[6rem] animate-in zoom-in duration-300 px-6 w-full">
+      {(isRecording || overallSuccess !== null || isProcessing) && (
+        <div className="text-center min-h-[8rem] animate-in zoom-in duration-300 px-6 w-full max-w-md">
           {isRecording && (
-            <div className="text-2xl md:text-3xl font-black text-destructive animate-pulse uppercase tracking-widest bg-destructive/10 py-6 rounded-3xl border-2 border-destructive/20 shadow-inner">
+            <div className="text-2xl font-black text-destructive animate-pulse uppercase tracking-widest bg-destructive/10 py-6 rounded-3xl border-2 border-destructive/20 shadow-inner">
               <TranslatedText fr="On t'écoute..." en="Listening..." inline />
             </div>
           )}
           
           {isProcessing && (
-            <div className="text-2xl md:text-3xl font-black text-primary uppercase tracking-widest flex items-center justify-center gap-4 py-6">
+            <div className="text-2xl font-black text-primary uppercase tracking-widest flex items-center justify-center gap-4 py-6">
               <Loader2 className="h-8 w-8 animate-spin" />
               <TranslatedText fr="Analyse magique..." en="Magic analyzing..." inline />
             </div>
           )}
 
-          {feedback && (
-            <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-              <div className={`flex flex-col items-center gap-4 ${feedback.isGoodPronunciation ? 'text-green-600' : 'text-orange-600'}`}>
-                {feedback.isGoodPronunciation ? (
-                   <CheckCircle2 className="h-20 w-20 animate-bounce" />
+          {overallSuccess !== null && (
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+              <div className={cn(
+                "flex flex-col items-center gap-3",
+                overallSuccess ? "text-green-600" : "text-orange-600"
+              )}>
+                {overallSuccess ? (
+                   <CheckCircle2 className="h-16 w-16 animate-bounce" />
                 ) : (
-                   <XCircle className="h-20 w-20" />
+                   <XCircle className="h-16 w-16" />
                 )}
-                <div className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-center">
-                  <TranslatedText fr={feedback.frFeedback} en={feedback.enFeedback} />
+                <div className="text-3xl font-black tracking-tight leading-none text-center">
+                  <TranslatedText 
+                    fr={overallSuccess ? "Magnifique ! Tout est correct." : "Presque parfait !"} 
+                    en={overallSuccess ? "Magnificent! Everything is correct." : "Almost perfect!"} 
+                  />
                 </div>
               </div>
               
-              {feedback.transcript && (
-                <div className="bg-white p-8 rounded-[3rem] border-4 border-dashed border-primary/20 shadow-xl max-w-lg mx-auto transform -rotate-1">
-                  <div className="text-muted-foreground text-xs uppercase font-black tracking-widest mb-3 opacity-80">
+              {transcript && (
+                <div className="bg-white p-6 rounded-[2.5rem] border-4 border-dashed border-primary/10 shadow-xl transform -rotate-1">
+                  <div className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-70">
                     <TranslatedText fr="J'ai entendu :" en="I heard:" inline />
                   </div>
-                  <div className="text-3xl md:text-5xl font-black text-primary italic leading-tight">
-                    "{feedback.transcript}"
+                  <div className="text-2xl font-black text-primary italic">
+                    "{transcript}"
                   </div>
                 </div>
               )}
