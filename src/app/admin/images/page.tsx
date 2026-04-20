@@ -1,14 +1,13 @@
-
 "use client"
 
 import React, { useState, useRef } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/app/lib/placeholder-images.json';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
