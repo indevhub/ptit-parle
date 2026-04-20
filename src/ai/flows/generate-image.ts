@@ -8,7 +8,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 
 const GenerateImageInputSchema = z.object({
   word: z.string().describe('The word to generate an illustration for.'),
@@ -26,12 +25,12 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     /**
-     * Using Imagen 3 as it is the primary model available in the Google AI Free Tier.
+     * Using 'imagen-3' which is the official alias for the free tier model.
      * Technical ID: imagen-3.0-generate-001
      * Reference: https://ai.google.dev/pricing
      */
     const response = await ai.generate({
-      model: 'googleai/imagen-3.0-generate-001',
+      model: 'googleai/imagen-3',
       prompt: `Generate a cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
     });
 

@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -17,6 +17,8 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+const MAX_MAGIC_ENERGY = 10; // Estimated hourly burst for free tier
+
 export default function ImageGalleryPage() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -25,6 +27,33 @@ export default function ImageGalleryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState<number>(0);
+  const [magicEnergy, setMagicEnergy] = useState<number>(MAX_MAGIC_ENERGY);
+
+  // Energy management
+  useEffect(() => {
+    const savedEnergy = localStorage.getItem('magic_energy');
+    const lastReset = localStorage.getItem('magic_energy_reset');
+    const now = Date.now();
+
+    if (savedEnergy && lastReset) {
+      // Reset energy every hour
+      if (now - parseInt(lastReset) > 3600000) {
+        setMagicEnergy(MAX_MAGIC_ENERGY);
+        localStorage.setItem('magic_energy', MAX_MAGIC_ENERGY.toString());
+        localStorage.setItem('magic_energy_reset', now.toString());
+      } else {
+        setMagicEnergy(parseInt(savedEnergy));
+      }
+    } else {
+      localStorage.setItem('magic_energy', MAX_MAGIC_ENERGY.toString());
+      localStorage.setItem('magic_energy_reset', now.toString());
+    }
+  }, []);
+
+  const updateEnergy = (newVal: number) => {
+    setMagicEnergy(newVal);
+    localStorage.setItem('magic_energy', newVal.toString());
+  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -36,7 +65,6 @@ export default function ImageGalleryPage() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
-  // Fetch all custom images for this user
   const customImagesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'customImages');
@@ -57,7 +85,17 @@ export default function ImageGalleryPage() {
   };
 
   const handleGenerate = async (word: any) => {
-    if (!firestore || !user || cooldown > 0) return;
+    if (!firestore || !user || cooldown > 0 || magicEnergy <= 0) {
+      if (magicEnergy <= 0) {
+        toast({
+          variant: "destructive",
+          title: <TranslatedText fr="Plus d'énergie !" en="No energy left!" inline noAudio />,
+          description: <TranslatedText fr="Attendons un peu que le cristal se recharge." en="Let's wait for the crystal to recharge." inline noAudio />,
+        });
+      }
+      return;
+    }
+    
     setProcessingId(word.id);
     
     try {
@@ -70,18 +108,18 @@ export default function ImageGalleryPage() {
           updatedAt: new Date().toISOString()
         }, { merge: true });
 
+        updateEnergy(magicEnergy - 1);
         toast({
           title: <TranslatedText fr="Magie réussie !" en="Magic success!" inline noAudio />,
-          description: <TranslatedText fr="Ton nouveau dessin est prêt !" en="Your new drawing is ready!" inline noAudio />,
         });
       }
     } catch (error: any) {
       const errorMsg = error.message || 'Unknown magic error';
       console.error('Image Gallery Error:', error);
       
-      // Specifically handle quota errors
       if (errorMsg.includes('429') || errorMsg.includes('quota') || errorMsg.includes('exhausted')) {
         setCooldown(60);
+        updateEnergy(0);
         toast({
           variant: "destructive",
           title: <TranslatedText fr="Trop de magie !" en="Too much magic!" inline noAudio />,
@@ -123,7 +161,6 @@ export default function ImageGalleryPage() {
       };
       reader.readAsDataURL(file);
     }
-    // Reset input
     if (e.target) e.target.value = '';
   };
 
@@ -131,10 +168,6 @@ export default function ImageGalleryPage() {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'users', user.uid, 'customImages', wordId);
     deleteDoc(docRef);
-    toast({
-      title: <TranslatedText fr="Image supprimée" en="Image deleted" inline noAudio />,
-      description: <TranslatedText fr="Retour au dessin d'origine." en="Back to original drawing." inline noAudio />,
-    });
   };
 
   return (
@@ -149,9 +182,14 @@ export default function ImageGalleryPage() {
               <Sparkles className="h-8 w-8 text-accent" />
               <TranslatedText fr="Galerie Magique" en="Magic Gallery" />
             </h1>
-            <p className="text-muted-foreground font-bold">
-              <TranslatedText fr="Personnalise les dessins de tes mots" en="Customize your word drawings" />
-            </p>
+            <div className="flex items-center justify-center gap-2">
+               <div className="bg-primary/10 px-4 py-1.5 rounded-full flex items-center gap-2 border border-primary/20">
+                 <Zap className={cn("h-4 w-4", magicEnergy > 0 ? "text-primary fill-primary" : "text-muted-foreground")} />
+                 <span className="text-xs font-black text-primary uppercase tracking-widest">
+                   {magicEnergy}/{MAX_MAGIC_ENERGY} <TranslatedText fr="Énergies" en="Energies" inline noAudio />
+                 </span>
+               </div>
+            </div>
           </div>
           <div className="w-12 h-12" />
         </div>
@@ -167,20 +205,14 @@ export default function ImageGalleryPage() {
             </AlertTitle>
             <AlertDescription className="text-orange-800 font-bold">
               <TranslatedText 
-                fr="L'artiste magique se repose un peu après avoir créé tant de dessins. On revient dans un instant !" 
-                en="The magic artist is taking a short rest after creating so many drawings. We'll be back in a moment!" 
+                fr="L'artiste magique se repose un peu. On revient dans un instant !" 
+                en="The magic artist is taking a short rest. We'll be back in a moment!" 
               />
             </AlertDescription>
           </Alert>
         )}
 
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
-          accept="image/*" 
-          onChange={handleFileChange}
-        />
+        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
         
         <div className="grid grid-cols-1 gap-6">
           {VOCABULARY.map((word) => {
@@ -206,7 +238,7 @@ export default function ImageGalleryPage() {
                         </div>
                       )}
                       {customUrl && (
-                        <div className="absolute top-2 right-2 flex gap-2">
+                        <div className="absolute top-2 right-2">
                            <Button 
                              size="icon" 
                              variant="destructive" 
@@ -225,12 +257,6 @@ export default function ImageGalleryPage() {
                           <span className="text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary px-3 py-1 rounded-full">
                             {word.category}
                           </span>
-                          {customUrl && (
-                            <span className="text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent px-3 py-1 rounded-full flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              Custom
-                            </span>
-                          )}
                         </div>
                         <h3 className="text-2xl font-black text-primary mb-1">
                           {word.french}
@@ -243,7 +269,7 @@ export default function ImageGalleryPage() {
                       <div className="grid grid-cols-2 gap-3 mt-6">
                         <Button
                           onClick={() => handleGenerate(word)}
-                          disabled={isProcessing || cooldown > 0}
+                          disabled={isProcessing || cooldown > 0 || magicEnergy <= 0}
                           className="rounded-2xl h-14 bg-accent hover:bg-accent/90 text-white font-bold shadow-lg gap-2"
                         >
                           <Wand2 className="h-5 w-5" />
