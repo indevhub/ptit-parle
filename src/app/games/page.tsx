@@ -4,13 +4,21 @@
 import React from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gamepad2, Headphones, Sparkles, Trophy, Star } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Gamepad2, Headphones, Sparkles, Trophy, Crosshair } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 
 export default function GamesMenuPage() {
   const games = [
+    {
+      title: "Huntrix",
+      translation: "Huntrix",
+      description: "Dirige ton personnage avec ta voix ! Dis 'Gauche', 'Droite', 'Haut' ou 'Bas'.",
+      icon: Crosshair,
+      color: "bg-indigo-600",
+      href: "/games/huntrix",
+      level: "Nouveau"
+    },
     {
       title: "Écoute Magique",
       translation: "Magic Listening",
@@ -72,7 +80,7 @@ export default function GamesMenuPage() {
                   <p className="text-sm text-muted-foreground">
                     <TranslatedText 
                       fr={game.description} 
-                      en={game.translation === "Magic Listening" ? "Listen to the word and find the right image." : game.translation === "Mystery Words" ? "Guess the word from the image." : "Find as many words as you can in 60 seconds!"} 
+                      en={game.translation === "Huntrix" ? "Control your character with your voice! Say 'Left', 'Right', 'Up', or 'Down'." : game.translation === "Magic Listening" ? "Listen to the word and find the right image." : game.translation === "Mystery Words" ? "Guess the word from the image." : "Find as many words as you can in 60 seconds!"} 
                     />
                   </p>
                 </div>
