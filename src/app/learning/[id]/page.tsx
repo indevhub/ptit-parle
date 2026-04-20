@@ -16,30 +16,28 @@ import { useUser, useFirestore } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-const UNSECURED_FAMILY_ID = "unsecured-family";
-
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     const activeId = localStorage.getItem('activeProfileId');
-    if (!activeId) {
+    if (!activeId && !isUserLoading) {
       router.push('/');
     } else {
       setProfileId(activeId);
     }
-  }, [router]);
+  }, [router, isUserLoading]);
 
   if (!word) {
     return notFound();
   }
 
-  if (!profileId) {
+  if (isUserLoading || !profileId || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
         <Loader2 className="h-16 w-16 text-primary animate-spin" />
@@ -47,18 +45,16 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
-
   const handlePronunciationSuccess = () => {
-    if (firestore && profileId) {
-      const profileRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
+    if (firestore && profileId && user) {
+      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
       
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(1),
         lastActiveAt: new Date().toISOString(),
       });
 
-      const vocabProgressRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
+      const vocabProgressRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
       setDocumentNonBlocking(vocabProgressRef, {
         learnerId: profileId,
         vocabularyItemId: word.id,

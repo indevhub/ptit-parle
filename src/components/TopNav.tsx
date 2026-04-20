@@ -2,22 +2,23 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Languages, Star, Sparkles, Users } from 'lucide-react';
+import { Languages, Star, Sparkles, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/TranslationContext';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
+import { initiateSignOut } from '@/firebase/non-blocking-login';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
-
-const UNSECURED_FAMILY_ID = "unsecured-family";
+import { usePathname, useRouter } from 'next/navigation';
 
 export function TopNav() {
   const { toggleEnglish, showEnglish } = useTranslation();
   const { user } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
   const pathname = usePathname();
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -26,12 +27,10 @@ export function TopNav() {
     setProfileId(localStorage.getItem('activeProfileId'));
   }, [pathname]);
 
-  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
-
   const profileRef = useMemoFirebase(() => {
-    if (!firestore || !profileId) return null;
-    return doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
-  }, [firestore, effectiveUserId, profileId]);
+    if (!firestore || !profileId || !user) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+  }, [firestore, user, profileId]);
 
   const { data: profile } = useDoc(profileRef);
 
@@ -53,8 +52,14 @@ export function TopNav() {
     return () => window.removeEventListener('scroll', controlNavbar);
   }, [lastScrollY]);
 
-  // Hide TopNav on the landing/profile picker page
-  if (pathname === '/') return null;
+  const handleLogout = () => {
+    initiateSignOut(auth);
+    localStorage.removeItem('activeProfileId');
+    router.push('/');
+  };
+
+  // Only hide TopNav on the entry page if the user is not logged in
+  if (pathname === '/' && !user) return null;
 
   return (
     <nav 
@@ -79,17 +84,19 @@ export function TopNav() {
             </div>
           )}
 
-          <Link href="/">
-             <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
-               <Users className="h-6 w-6" />
-             </Button>
-          </Link>
+          {user && (
+            <Link href="/">
+               <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
+                 <Users className="h-6 w-6" />
+               </Button>
+            </Link>
+          )}
 
           <Button 
             variant={showEnglish ? "default" : "outline"}
             size="sm" 
             onClick={toggleEnglish}
-            className="rounded-full gap-2 font-bold transition-all shadow-sm border-2"
+            className="rounded-full gap-2 font-bold transition-all shadow-sm border-2 h-9"
           >
             <Languages className="h-4 w-4" />
             <span className="hidden sm:inline text-[10px] md:text-xs">

@@ -5,36 +5,57 @@ import React, { useState } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail } from 'lucide-react';
+import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail, LogIn, Chrome, Lock, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
-// We use a shared ID for the "unsecured" mode so data is synced across devices but requires no login.
-const UNSECURED_FAMILY_ID = "unsecured-family";
-
-export default function ProfilePickerPage() {
+export default function RootEntryPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [newProfileName, setNewProfileName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  
-  // Use the authenticated user's ID if available, otherwise fall back to the unsecured shared ID.
-  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
 
+  // Profile data is only queried if a user is authenticated
   const profilesRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users', effectiveUserId, 'learnerProfiles');
-  }, [firestore, effectiveUserId]);
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'learnerProfiles');
+  }, [firestore, user]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMode === 'login') {
+      initiateEmailSignIn(auth, email, password);
+    } else {
+      initiateEmailSignUp(auth, email, password);
+    }
+  };
+
+  const handleGoogleAuth = () => {
+    initiateGoogleSignIn(auth);
+  };
+
+  const handleSignOut = () => {
+    initiateSignOut(auth);
+    localStorage.removeItem('activeProfileId');
+    toast({ title: "À bientôt !", description: "Déconnexion réussie." });
+  };
 
   const handleSelectProfile = (profileId: string) => {
     localStorage.setItem('activeProfileId', profileId);
@@ -42,11 +63,11 @@ export default function ProfilePickerPage() {
   };
 
   const handleCreateProfile = () => {
-    if (!firestore || !newProfileName.trim()) return;
+    if (!firestore || !user || !newProfileName.trim()) return;
 
     setIsCreating(true);
     const profileId = Math.random().toString(36).substring(7);
-    const profileRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
+    const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
 
     setDocumentNonBlocking(profileRef, {
       id: profileId,
@@ -57,12 +78,11 @@ export default function ProfilePickerPage() {
     }, { merge: true });
 
     // Ensure the family document exists
-    const familyRef = doc(firestore, 'users', effectiveUserId);
+    const familyRef = doc(firestore, 'users', user.uid);
     setDocumentNonBlocking(familyRef, {
-      uid: effectiveUserId,
-      email: user?.email || "unsecured@ptitparle.app",
+      uid: user.uid,
+      email: user.email,
       createdAt: new Date().toISOString(),
-      isUnsecured: !user
     }, { merge: true });
 
     setTimeout(() => {
@@ -84,25 +104,98 @@ export default function ProfilePickerPage() {
     );
   }
 
+  // AUTHENTICATION SCREEN
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center py-12 px-6">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center space-y-4">
+            <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl inline-block mb-4 transform -rotate-3">
+              <Sparkles className="h-16 w-16 text-primary" />
+            </div>
+            <h1 className="text-5xl font-black text-primary tracking-tighter">P&apos;tit Parlé</h1>
+            <p className="text-lg text-muted-foreground font-bold italic">
+              <TranslatedText fr="Ton aventure commence ici !" en="Your adventure starts here!" noAudio />
+            </p>
+          </div>
+
+          <Card className="rounded-[2.5rem] border-none shadow-2xl bg-white overflow-hidden p-8 space-y-6">
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="ml-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email</Label>
+                <Input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="famille@magique.com" 
+                  className="h-14 rounded-2xl bg-muted border-none font-bold"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="ml-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mot de passe</Label>
+                <Input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="h-14 rounded-2xl bg-muted border-none font-bold"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-lg font-black shadow-xl child-button">
+                {authMode === 'login' ? <LogIn className="mr-2 h-5 w-5" /> : <UserPlus className="mr-2 h-5 w-5" />}
+                <TranslatedText fr={authMode === 'login' ? "Se connecter" : "Créer un compte"} en={authMode === 'login' ? "Log In" : "Sign Up"} inline noAudio />
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground font-bold">Ou</span></div>
+            </div>
+
+            <Button onClick={handleGoogleAuth} variant="outline" className="w-full h-14 rounded-full border-2 font-black shadow-lg child-button">
+              <Chrome className="mr-2 h-5 w-5" />
+              <TranslatedText fr="Continuer avec Google" en="Continue with Google" inline noAudio />
+            </Button>
+
+            <div className="text-center pt-2">
+              <button 
+                onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                className="text-sm font-bold text-primary hover:underline"
+              >
+                <TranslatedText 
+                  fr={authMode === 'login' ? "Pas encore de compte ? Créer un compte" : "Déjà un compte ? Se connecter"} 
+                  en={authMode === 'login' ? "No account? Sign up" : "Already have an account? Log in"} 
+                  noAudio
+                />
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // PROFILE PICKER SCREEN
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-start py-12 px-6 space-y-10">
-      {/* Auth Info is hidden in unsecured mode as requested */}
-      {user && (
-        <div className="w-full max-w-2xl flex justify-between items-center opacity-40">
-          <div className="bg-primary/10 px-4 py-2 rounded-full text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-            <Mail className="h-3 w-3" />
-            {user.email}
-          </div>
+      <div className="w-full max-w-2xl flex justify-between items-center">
+        <div className="bg-primary/10 px-4 py-2 rounded-full text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <Mail className="h-3 w-3" />
+          {user.email}
         </div>
-      )}
+        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive font-bold gap-2">
+          <LogOut className="h-4 w-4" />
+          <TranslatedText fr="Quitter" en="Logout" inline noAudio />
+        </Button>
+      </div>
 
       <div className="text-center space-y-4">
         <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl inline-block mb-4 transform -rotate-3">
-          <Sparkles className="h-16 w-16 text-primary" />
+          <User className="h-16 w-16 text-primary" />
         </div>
-        <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tighter">
-          P&apos;tit Parlé
-        </h1>
+        <h1 className="text-5xl font-black text-primary tracking-tighter">Explorateurs</h1>
         <p className="text-xl text-muted-foreground font-bold">
           <TranslatedText fr="Qui va apprendre aujourd'hui ?" en="Who is learning today?" noAudio />
         </p>
@@ -184,14 +277,6 @@ export default function ProfilePickerPage() {
           </>
         )}
       </div>
-
-      <footer className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] opacity-40 text-center pt-8">
-        <TranslatedText 
-          fr="Accès libre et sécurisé dans le cloud" 
-          en="Open and secure cloud access" 
-          noAudio
-        />
-      </footer>
     </div>
   );
 }

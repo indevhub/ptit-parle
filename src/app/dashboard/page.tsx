@@ -16,8 +16,6 @@ import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
-const UNSECURED_FAMILY_ID = "unsecured-family";
-
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -26,19 +24,17 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const activeId = localStorage.getItem('activeProfileId');
-    if (!activeId) {
+    if (!activeId && !isUserLoading) {
       router.push('/');
     } else {
       setProfileId(activeId);
     }
-  }, [router]);
-
-  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
+  }, [router, isUserLoading]);
 
   const profileRef = useMemoFirebase(() => {
-    if (!firestore || !profileId) return null;
-    return doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
-  }, [firestore, effectiveUserId, profileId]);
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+  }, [firestore, user, profileId]);
 
   const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
 
@@ -57,7 +53,7 @@ export default function DashboardPage() {
     router.push('/');
   };
 
-  if (isUserLoading || isProfileLoading || !profileId) {
+  if (isUserLoading || isProfileLoading || !profileId || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
