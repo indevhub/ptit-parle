@@ -1,17 +1,21 @@
+
 "use client"
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Languages, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/TranslationContext';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export function TopNav() {
   const { toggleEnglish, showEnglish } = useTranslation();
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const profileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -20,8 +24,41 @@ export function TopNav() {
 
   const { data: profile } = useDoc(profileRef);
 
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+        
+        // Always show at the very top
+        if (currentScrollY < 10) {
+          setIsVisible(true);
+        } 
+        // Hide if scrolling down
+        else if (currentScrollY > lastScrollY) {
+          setIsVisible(false);
+        } 
+        // Show if scrolling up
+        else if (currentScrollY < lastScrollY) {
+          setIsVisible(true);
+        }
+        
+        setLastScrollY(currentScrollY);
+      }
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => {
+      window.removeEventListener('scroll', controlNavbar);
+    };
+  }, [lastScrollY]);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b z-[60] px-4 md:px-6 transition-all duration-300">
+    <nav 
+      className={cn(
+        "fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b z-[60] px-4 md:px-6 transition-all duration-500 ease-in-out transform",
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+      )}
+    >
       <div className="max-w-screen-md mx-auto h-full flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2 group">
           <div className="bg-primary rounded-lg p-1.5 transition-transform group-hover:rotate-12">
