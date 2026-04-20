@@ -25,15 +25,14 @@ export const generateWordImageFlow = ai.defineFlow(
     outputSchema: z.string().optional(),
   },
   async (input) => {
-    // We use gemini-2.5-flash-image for multimodal generation
-    const { media } = await ai.generate({
-      model: googleAI.model('gemini-2.5-flash-image'),
+    // Switching to Imagen 3 (imagen-3.0-generate-001) which is the standard high-quality
+    // text-to-image model for the free tier.
+    const response = await ai.generate({
+      model: googleAI.model('imagen-3.0-generate-001'),
       prompt: `A cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
-      config: {
-        // Critical: Gemini 2.5 Flash Image requires both TEXT and IMAGE modalities to be specified
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
     });
+
+    const media = response.media;
 
     if (!media || !media.url) {
       throw new Error('The magic mirror returned an empty response. This usually happens if the AI artist is resting (quota) or the prompt was blocked by safety filters.');
