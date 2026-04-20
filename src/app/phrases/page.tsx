@@ -1,10 +1,10 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageSquare, Sparkles, Languages, Loader2, Trash2, ArrowRight } from 'lucide-react';
+import { MessageSquare, Sparkles, Languages, Loader2, Trash2, ArrowRight, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -16,12 +16,24 @@ import { EnglishVoiceRecorder } from '@/components/EnglishVoiceRecorder';
 import { useToast } from '@/hooks/use-toast';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function PhrasesPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isTranslating, setIsTranslating] = useState(false);
+  const [cooldown, setCooldown] = useState<number>(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const phrasesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -34,7 +46,7 @@ export default function PhrasesPage() {
   const { data: phrases, isLoading } = useCollection(phrasesRef);
 
   const handleAddPhrase = async (englishText: string) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || cooldown > 0) return;
     
     setIsTranslating(true);
     try {
@@ -55,11 +67,21 @@ export default function PhrasesPage() {
         description: <TranslatedText fr="Ta nouvelle phrase magique est prête." en="Your new magic phrase is ready." inline />,
       });
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: <TranslatedText fr="Erreur de traduction" en="Translation Error" inline />,
-        description: <TranslatedText fr="Désolé, la magie n'a pas fonctionné." en="Sorry, the magic didn't work." inline />,
-      });
+      const msg = error.message?.toLowerCase() || '';
+      if (msg.includes('429') || msg.includes('quota') || msg.includes('limit')) {
+        setCooldown(60);
+        toast({
+          variant: "destructive",
+          title: <TranslatedText fr="Trop de magie !" en="Too much magic!" inline />,
+          description: <TranslatedText fr="Attendons un peu avant de continuer." en="Let's wait a bit before continuing." inline />,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: <TranslatedText fr="Erreur de traduction" en="Translation Error" inline />,
+          description: <TranslatedText fr="Désolé, la magie n'a pas fonctionné." en="Sorry, the magic didn't work." inline />,
+        });
+      }
     } finally {
       setIsTranslating(false);
     }
@@ -95,7 +117,25 @@ export default function PhrasesPage() {
             <TranslatedText fr="Dis quelque chose en anglais, je le traduis !" en="Say something in English, I'll translate it!" />
           </p>
           
-          <div className="bg-accent/10 p-6 rounded-[2rem] border-2 border-dashed border-accent/20">
+          <div className="bg-accent/10 p-6 rounded-[2rem] border-2 border-dashed border-accent/20 relative">
+            {cooldown > 0 && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-[2rem] z-10 flex items-center justify-center p-6">
+                <Alert className="bg-orange-50 border-orange-200 shadow-xl max-w-sm">
+                  <Timer className="h-5 w-5 text-orange-600" />
+                  <AlertTitle className="text-orange-950 font-black flex items-center gap-2">
+                    <TranslatedText fr="Pause Magique" en="Magic Break" inline />
+                    <span className="bg-orange-600 text-white px-3 py-0.5 rounded-full text-sm">{cooldown}s</span>
+                  </AlertTitle>
+                  <AlertDescription className="text-orange-800 font-bold">
+                    <TranslatedText 
+                      fr="Le traducteur magique se repose. Réessaie dans quelques secondes !" 
+                      en="The magic translator is resting. Try again in a few seconds!" 
+                    />
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+            
             <div className="flex flex-col items-center gap-4">
               {isTranslating ? (
                 <div className="flex flex-col items-center gap-2 text-accent">

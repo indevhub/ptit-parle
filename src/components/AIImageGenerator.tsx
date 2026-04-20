@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles, Key, Info, ExternalLink } from 'lucide-react';
+import { Wand2, Loader2, ImageIcon, AlertCircle, Sparkles, Timer } from 'lucide-react';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import Image from 'next/image';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface AIImageGeneratorProps {
   word: string;
@@ -17,13 +18,24 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [cooldown, setCooldown] = useState<number>(0);
   const { toast } = useToast();
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
   const handleGenerate = async () => {
+    if (cooldown > 0) return;
+    
     setIsLoading(true);
     setError(null);
-    setIsDemoMode(false);
     
     try {
       const url = await generateWordImage({ word });
@@ -33,34 +45,16 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
         throw new Error('No image returned');
       }
     } catch (err: any) {
-      console.error('Image generation error:', err);
-      
-      const errorMessage = err.message || '';
-      // Detect common API key issues
-      const isAuthError = 
-        errorMessage.includes('API key') || 
-        errorMessage.includes('400') || 
-        errorMessage.includes('invalid') ||
-        errorMessage.includes('not found') ||
-        errorMessage.includes('permission');
-      
-      if (isAuthError) {
-        setIsDemoMode(true);
-        // High quality placeholder for demo
-        const fallbackUrl = `https://picsum.photos/seed/${word}/600/600`;
-        setGeneratedUrl(fallbackUrl);
-        
+      const msg = err.message?.toLowerCase() || '';
+      if (msg.includes('429') || msg.includes('quota') || msg.includes('limit')) {
+        setCooldown(60); // standard 1 min cooldown for free tier
         toast({
-          title: 'Mode Démo Activé',
-          description: "Utilisation d'une image de secours en attendant ta clé API.",
+          variant: "destructive",
+          title: <TranslatedText fr="Limite Atteinte" en="Limit Reached" inline />,
+          description: <TranslatedText fr="La magie a besoin de repos !" en="The magic needs a rest!" inline />,
         });
       } else {
         setError('Échec de la génération');
-        toast({
-          variant: 'destructive',
-          title: 'Erreur Magique',
-          description: 'Désolé, le dessin magique n\'a pas fonctionné.',
-        });
       }
     } finally {
       setIsLoading(false);
@@ -79,6 +73,22 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
         </p>
       </div>
 
+      {cooldown > 0 && (
+        <Alert className="bg-orange-50 border-orange-200 rounded-3xl animate-in zoom-in duration-300">
+          <Timer className="h-5 w-5 text-orange-600" />
+          <AlertTitle className="text-orange-950 font-black flex items-center gap-2">
+            <TranslatedText fr="Pause Magique" en="Magic Break" inline />
+            <span className="bg-orange-600 text-white px-3 py-0.5 rounded-full text-sm">{cooldown}s</span>
+          </AlertTitle>
+          <AlertDescription className="text-orange-800 font-bold">
+            <TranslatedText 
+              fr="L'artiste se repose un peu. On revient dans un instant !" 
+              en="The artist is resting. We'll be back in a moment!" 
+            />
+          </AlertDescription>
+        </Alert>
+      )}
+
       {generatedUrl ? (
         <div className="relative aspect-square w-full rounded-2xl overflow-hidden animate-in zoom-in duration-500 ring-4 ring-accent/10">
           <Image
@@ -87,22 +97,10 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             fill
             className="object-cover"
           />
-          {isDemoMode && (
-            <div className="absolute top-2 left-2 right-2 bg-yellow-500/95 backdrop-blur-md text-white text-[10px] font-bold px-3 py-2 rounded-full flex items-center justify-between shadow-lg">
-              <div className="flex items-center gap-1.5">
-                <Key className="h-3 w-3" />
-                CLÉ API REQUISE
-              </div>
-              <Sparkles className="h-3 w-3 animate-pulse" />
-            </div>
-          )}
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => {
-              setGeneratedUrl(null);
-              setIsDemoMode(false);
-            }}
+            onClick={() => setGeneratedUrl(null)}
             className="absolute bottom-2 right-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md"
           >
             <TranslatedText fr="Effacer" en="Clear" />
@@ -112,7 +110,7 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
         <div className="w-full space-y-4">
           <Button
             onClick={handleGenerate}
-            disabled={isLoading}
+            disabled={isLoading || cooldown > 0}
             className="w-full h-16 rounded-2xl bg-gradient-to-r from-primary to-accent hover:opacity-90 child-button text-lg font-bold shadow-lg"
           >
             {isLoading ? (
@@ -123,30 +121,10 @@ export function AIImageGenerator({ word }: AIImageGeneratorProps) {
             <TranslatedText fr="Générer l'Image" en="Generate Image" />
           </Button>
           
-          <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-3">
-            <div className="flex items-start gap-3">
-              <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-              <div className="text-[11px] text-blue-700 leading-normal">
-                <p className="font-bold mb-1 underline">Solution pour Seattle / US :</p>
-                <p>Si AI Studio redirige, utilisez la Console Cloud :</p>
-              </div>
-            </div>
-            
-            <ol className="text-[10px] text-blue-600/80 space-y-1.5 list-decimal pl-4">
-              <li>
-                Allez sur <a href="https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com" target="_blank" className="font-bold underline inline-flex items-center gap-0.5">Console Cloud <ExternalLink className="h-2 w-2" /></a>
-              </li>
-              <li>Activez <strong>Generative Language API</strong>.</li>
-              <li>Créez une <strong>Clé API</strong> dans "Identifiants".</li>
-              <li>Dans "Restrictions API", cherchez et cochez <strong>Generative Language API</strong>.</li>
-              <li>Collez la clé dans le fichier <code className="bg-white px-1 rounded font-bold">.env</code>.</li>
-            </ol>
-          </div>
-          
           {error && (
-            <div className="flex items-center gap-2 text-destructive text-xs justify-center bg-destructive/10 p-2 rounded-xl animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-center gap-2 text-destructive text-xs justify-center bg-destructive/10 p-2 rounded-xl">
               <AlertCircle className="h-4 w-4" />
-              <span>{error}</span>
+              <TranslatedText fr="Oups ! La magie a échoué." en="Oops! Magic failed." inline />
             </div>
           )}
         </div>
