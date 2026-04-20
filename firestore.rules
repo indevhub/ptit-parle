@@ -1,5 +1,5 @@
 
-// LAST UPDATED: 2026-04-20T04:45:00Z - FORCING RE-DEPLOYMENT FOR PERMISSIONS
+// LAST UPDATED: 2026-04-20T05:15:00Z - FORCING RE-DEPLOYMENT FOR PERMISSIONS
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {

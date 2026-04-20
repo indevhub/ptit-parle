@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -76,15 +76,16 @@ export default function ImageGalleryPage() {
         });
       }
     } catch (error: any) {
-      const errorMsg = error.message || 'Unknown error';
+      const errorMsg = error.message || 'Unknown magic error';
       console.error('Image Gallery Error:', error);
       
-      if (errorMsg.includes('429') || errorMsg.includes('quota') || errorMsg.includes('limit')) {
+      // Specifically handle quota errors
+      if (errorMsg.includes('429') || errorMsg.includes('quota') || errorMsg.includes('exhausted')) {
         setCooldown(60);
         toast({
           variant: "destructive",
           title: <TranslatedText fr="Trop de magie !" en="Too much magic!" inline noAudio />,
-          description: <TranslatedText fr="L'artiste se repose un peu. Réessaye dans une minute." en="The artist is resting. Try again in a minute." inline noAudio />,
+          description: <TranslatedText fr="L'artiste se repose (Limite API). Réessaye dans une minute." en="The artist is resting (API Limit). Try again in a minute." inline noAudio />,
         });
       } else {
         toast({
