@@ -1,7 +1,8 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Languages, Star, Sparkles, UserCircle } from 'lucide-react';
+import { Languages, Star, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/TranslationContext';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
@@ -9,6 +10,8 @@ import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+
+const UNSECURED_FAMILY_ID = "unsecured-family";
 
 export function TopNav() {
   const { toggleEnglish, showEnglish } = useTranslation();
@@ -23,10 +26,12 @@ export function TopNav() {
     setProfileId(localStorage.getItem('activeProfileId'));
   }, [pathname]);
 
+  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
+
   const profileRef = useMemoFirebase(() => {
-    if (!firestore || !user || !profileId) return null;
-    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
-  }, [firestore, user, profileId]);
+    if (!firestore || !profileId) return null;
+    return doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
+  }, [firestore, effectiveUserId, profileId]);
 
   const { data: profile } = useDoc(profileRef);
 
@@ -76,7 +81,7 @@ export function TopNav() {
 
           <Link href="/">
              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
-               <UserCircle className="h-6 w-6" />
+               <Users className="h-6 w-6" />
              </Button>
           </Link>
 

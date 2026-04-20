@@ -1,10 +1,11 @@
+
 "use client"
 
 import React, { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Loader2, LogOut } from 'lucide-react';
+import { Sparkles, Loader2, Users } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,6 +16,8 @@ import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
+const UNSECURED_FAMILY_ID = "unsecured-family";
+
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -23,21 +26,23 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const activeId = localStorage.getItem('activeProfileId');
-    if (!activeId && !isUserLoading) {
+    if (!activeId) {
       router.push('/');
     } else {
       setProfileId(activeId);
     }
-  }, [isUserLoading, router]);
+  }, [router]);
+
+  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
 
   const profileRef = useMemoFirebase(() => {
-    if (!firestore || !user || !profileId) return null;
-    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
-  }, [firestore, user, profileId]);
+    if (!firestore || !profileId) return null;
+    return doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
+  }, [firestore, effectiveUserId, profileId]);
 
   const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  const learnedCount = 3; // Static for demo, could be calculated from vocabularyProgresses subcollection
+  const learnedCount = 3; // Static for demo
 
   const getPlaceholderData = (id: string) => {
     const placeholder = PlaceHolderImages.find(img => img.id === id);
@@ -78,8 +83,8 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleSwitchProfile} className="rounded-2xl text-muted-foreground hover:text-primary">
-            <LogOut className="h-6 w-6" />
+          <Button variant="ghost" size="icon" onClick={handleSwitchProfile} className="rounded-2xl text-muted-foreground hover:text-primary h-12 w-12 bg-muted/50">
+            <Users className="h-6 w-6" />
           </Button>
         </div>
       </header>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -18,8 +19,10 @@ import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 
+const UNSECURED_FAMILY_ID = "unsecured-family";
+
 export default function PhrasesPage() {
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [isTranslating, setIsTranslating] = useState(false);
@@ -29,12 +32,12 @@ export default function PhrasesPage() {
 
   useEffect(() => {
     const activeId = localStorage.getItem('activeProfileId');
-    if (!activeId && !isUserLoading) {
+    if (!activeId) {
       router.push('/');
     } else {
       setProfileId(activeId);
     }
-  }, [isUserLoading, router]);
+  }, [router]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -46,24 +49,26 @@ export default function PhrasesPage() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
+
   const phrasesRef = useMemoFirebase(() => {
-    if (!firestore || !user || !profileId) return null;
+    if (!firestore || !profileId) return null;
     return query(
-      collection(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases'),
+      collection(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'phrases'),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user, profileId]);
+  }, [firestore, effectiveUserId, profileId]);
 
   const { data: phrases, isLoading } = useCollection(phrasesRef);
 
   const handleAddPhrase = useCallback(async (englishText: string) => {
-    if (!user || !firestore || !profileId || cooldown > 0) return;
+    if (!firestore || !profileId || cooldown > 0) return;
     
     setIsTranslating(true);
     try {
       const result = await translatePhrase({ englishText });
       const phraseId = Math.random().toString(36).substring(7);
-      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', phraseId);
+      const phraseRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'phrases', phraseId);
       
       setDocumentNonBlocking(phraseRef, {
         id: phraseId,
@@ -96,27 +101,27 @@ export default function PhrasesPage() {
     } finally {
       setIsTranslating(false);
     }
-  }, [user, firestore, profileId, cooldown, toast]);
+  }, [firestore, effectiveUserId, profileId, cooldown, toast]);
 
   const handleDelete = (id: string) => {
-    if (!user || !firestore || !profileId) return;
-    const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', id);
+    if (!firestore || !profileId) return;
+    const phraseRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'phrases', id);
     deleteDocumentNonBlocking(phraseRef);
   };
 
   const handleSuccess = (phraseId: string) => {
-    if (user && firestore && profileId) {
-      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+    if (firestore && profileId) {
+      const profileRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(2),
         lastActiveAt: new Date().toISOString(),
       });
-      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', phraseId);
+      const phraseRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'phrases', phraseId);
       updateDocumentNonBlocking(phraseRef, { isMastered: true });
     }
   };
 
-  if (isUserLoading || !profileId) {
+  if (!profileId) {
     return (
       <div className="flex justify-center p-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

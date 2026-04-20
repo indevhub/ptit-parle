@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { use, useEffect, useState } from 'react';
@@ -15,50 +16,49 @@ import { useUser, useFirestore } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
+const UNSECURED_FAMILY_ID = "unsecured-family";
+
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const word = VOCABULARY.find(w => w.id === id);
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [profileId, setProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     const activeId = localStorage.getItem('activeProfileId');
-    if (!activeId && !isUserLoading) {
+    if (!activeId) {
       router.push('/');
     } else {
       setProfileId(activeId);
     }
-  }, [isUserLoading, router]);
+  }, [router]);
 
   if (!word) {
     return notFound();
   }
 
-  if (isUserLoading || !user || !profileId) {
+  if (!profileId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
-        <div className="flex flex-col items-center gap-6">
-          <Loader2 className="h-16 w-16 text-primary animate-spin" />
-          <div className="text-xl font-black text-primary animate-pulse tracking-widest uppercase">
-            <TranslatedText fr="Chargement Magique..." en="Magic Loading..." inline />
-          </div>
-        </div>
+        <Loader2 className="h-16 w-16 text-primary animate-spin" />
       </div>
     );
   }
 
+  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
+
   const handlePronunciationSuccess = () => {
-    if (user && firestore && profileId) {
-      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+    if (firestore && profileId) {
+      const profileRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
       
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(1),
         lastActiveAt: new Date().toISOString(),
       });
 
-      const vocabProgressRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
+      const vocabProgressRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId, 'vocabularyProgresses', word.id);
       setDocumentNonBlocking(vocabProgressRef, {
         learnerId: profileId,
         vocabularyItemId: word.id,

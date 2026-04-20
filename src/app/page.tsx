@@ -7,34 +7,32 @@ import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserPlus, Sparkles, User, ArrowRight, LogIn, Mail, LogOut } from 'lucide-react';
+import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { initiateEmailSignIn, initiateEmailSignUp, initiateSignOut } from '@/firebase/non-blocking-login';
-import { useToast } from '@/hooks/use-toast';
+
+// We use a shared ID for the "unsecured" mode so data is synced across devices but requires no login.
+const UNSECURED_FAMILY_ID = "unsecured-family";
 
 export default function ProfilePickerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const auth = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
   
   const [newProfileName, setNewProfileName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Use the authenticated user's ID if available, otherwise fall back to the unsecured shared ID.
+  const effectiveUserId = user?.uid || UNSECURED_FAMILY_ID;
 
   const profilesRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'learnerProfiles');
-  }, [firestore, user]);
+    if (!firestore) return null;
+    return collection(firestore, 'users', effectiveUserId, 'learnerProfiles');
+  }, [firestore, effectiveUserId]);
 
   const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
 
@@ -44,11 +42,11 @@ export default function ProfilePickerPage() {
   };
 
   const handleCreateProfile = () => {
-    if (!user || !firestore || !newProfileName.trim()) return;
+    if (!firestore || !newProfileName.trim()) return;
 
     setIsCreating(true);
     const profileId = Math.random().toString(36).substring(7);
-    const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+    const profileRef = doc(firestore, 'users', effectiveUserId, 'learnerProfiles', profileId);
 
     setDocumentNonBlocking(profileRef, {
       id: profileId,
@@ -58,13 +56,13 @@ export default function ProfilePickerPage() {
       lastActiveAt: new Date().toISOString(),
     }, { merge: true });
 
-    // Ensure user document exists in Firestore
-    const userRef = doc(firestore, 'users', user.uid);
-    setDocumentNonBlocking(userRef, {
-      uid: user.uid,
-      email: user.email,
+    // Ensure the family document exists
+    const familyRef = doc(firestore, 'users', effectiveUserId);
+    setDocumentNonBlocking(familyRef, {
+      uid: effectiveUserId,
+      email: user?.email || "unsecured@ptitparle.app",
       createdAt: new Date().toISOString(),
-      isAnonymous: false
+      isUnsecured: !user
     }, { merge: true });
 
     setTimeout(() => {
@@ -73,22 +71,6 @@ export default function ProfilePickerPage() {
       setNewProfileName('');
       handleSelectProfile(profileId);
     }, 500);
-  };
-
-  const handleAuth = () => {
-    if (authMode === 'login') {
-      initiateEmailSignIn(auth, email, password);
-      toast({ title: "Connexion en cours...", description: "Magie en cours..." });
-    } else {
-      initiateEmailSignUp(auth, email, password);
-      toast({ title: "Création du compte...", description: "Presque fini !" });
-    }
-  };
-
-  const handleSignOut = () => {
-    initiateSignOut(auth);
-    localStorage.removeItem('activeProfileId');
-    toast({ title: "À bientôt !", description: "Déconnexion réussie." });
   };
 
   if (isUserLoading) {
@@ -102,110 +84,23 @@ export default function ProfilePickerPage() {
     );
   }
 
-  // If no user is logged in, show the Auth screen
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 space-y-10">
-        <div className="text-center space-y-4">
-          <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl inline-block mb-4 transform -rotate-3">
-            <Sparkles className="h-16 w-16 text-primary" />
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tighter">
-            P&apos;tit Parlé
-          </h1>
-          <p className="text-xl text-muted-foreground font-bold max-w-sm">
-            <TranslatedText fr="Apprends le français en t'amusant !" en="Learn French while having fun!" noAudio />
-          </p>
-        </div>
-
-        <Card className="w-full max-w-md rounded-[3rem] border-none shadow-2xl bg-white p-8">
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-3xl font-black text-primary mb-2">
-                <TranslatedText 
-                  fr={authMode === 'login' ? "Bon Retour !" : "Nouveau Compte"} 
-                  en={authMode === 'login' ? "Welcome Back!" : "New Account"} 
-                  noAudio
-                />
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="ml-2 font-black uppercase text-[10px] tracking-[0.2em] text-muted-foreground">Email</Label>
-                <Input 
-                  type="email" 
-                  placeholder="famille@exemple.com"
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  className="rounded-2xl bg-muted border-none h-14 px-6 text-lg font-bold"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="ml-2 font-black uppercase text-[10px] tracking-[0.2em] text-muted-foreground">
-                  <TranslatedText fr="Mot de passe" en="Password" inline noAudio />
-                </Label>
-                <Input 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  className="rounded-2xl bg-muted border-none h-14 px-6 text-lg font-bold"
-                />
-              </div>
-            </div>
-
-            <Button onClick={handleAuth} className="w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-black shadow-xl child-button">
-              {authMode === 'login' ? <LogIn className="h-6 w-6 mr-2" /> : <Sparkles className="h-6 w-6 mr-2" />}
-              <TranslatedText 
-                fr={authMode === 'login' ? "Se connecter" : "S'inscrire"} 
-                en={authMode === 'login' ? "Log In" : "Sign Up"} 
-                inline
-                noAudio
-              />
-            </Button>
-
-            <div className="text-center">
-              <button 
-                onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                className="text-primary font-black uppercase tracking-widest text-[10px] hover:underline"
-              >
-                <TranslatedText 
-                  fr={authMode === 'login' ? "Pas de compte ? Créer un compte" : "Déjà un compte ? Se connecter"} 
-                  en={authMode === 'login' ? "No account? Sign Up" : "Have an account? Log In"} 
-                  noAudio
-                />
-              </button>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  // If logged in, show the Profile Picker
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-start py-12 px-6 space-y-10">
-      <div className="w-full max-w-2xl flex justify-between items-center">
-        <div className="bg-primary/10 px-4 py-2 rounded-full text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <Mail className="h-3 w-3" />
-          {user?.email}
+      {/* Auth Info is hidden in unsecured mode as requested */}
+      {user && (
+        <div className="w-full max-w-2xl flex justify-between items-center opacity-40">
+          <div className="bg-primary/10 px-4 py-2 rounded-full text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+            <Mail className="h-3 w-3" />
+            {user.email}
+          </div>
         </div>
-        <Button 
-          variant="ghost" 
-          onClick={handleSignOut}
-          className="rounded-full gap-2 text-muted-foreground hover:text-destructive font-bold uppercase text-[10px] tracking-widest"
-        >
-          <LogOut className="h-4 w-4" />
-          <TranslatedText fr="Quitter" en="Sign Out" inline noAudio />
-        </Button>
-      </div>
+      )}
 
       <div className="text-center space-y-4">
-        <div className="bg-white p-4 rounded-[2rem] shadow-xl inline-block mb-4">
-          <User className="h-12 w-12 text-primary" />
+        <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl inline-block mb-4 transform -rotate-3">
+          <Sparkles className="h-16 w-16 text-primary" />
         </div>
-        <h1 className="text-4xl font-black text-primary tracking-tight">
+        <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tighter">
           P&apos;tit Parlé
         </h1>
         <p className="text-xl text-muted-foreground font-bold">
@@ -292,8 +187,8 @@ export default function ProfilePickerPage() {
 
       <footer className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] opacity-40 text-center pt-8">
         <TranslatedText 
-          fr="Tes données sont synchronisées dans le cloud" 
-          en="Your data is synced to the cloud" 
+          fr="Accès libre et sécurisé dans le cloud" 
+          en="Open and secure cloud access" 
           noAudio
         />
       </footer>
