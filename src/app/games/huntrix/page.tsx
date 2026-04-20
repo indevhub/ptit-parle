@@ -1,10 +1,9 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
@@ -46,34 +45,22 @@ export default function HuntrixPage() {
 
     let found = false;
     
-    // Commands: Left/Gauche
     if (cmd.includes('left') || cmd.includes('gauche')) {
       setDirection('left');
       setPos(prev => ({ ...prev, x: Math.max(10, prev.x - moveSpeed) }));
       found = true;
     } 
-    // Commands: Right/Droite
     else if (cmd.includes('right') || cmd.includes('droite')) {
       setDirection('right');
       setPos(prev => ({ ...prev, x: Math.min(90, prev.x + moveSpeed) }));
       found = true;
     } 
-    // Commands: Monter
-    else if (
-      cmd.includes('monter') || 
-      cmd.includes('monte') || 
-      cmd.includes('montez')
-    ) {
+    else if (cmd.includes('monter') || cmd.includes('monte') || cmd.includes('montez')) {
       setDirection('up');
       setPos(prev => ({ ...prev, y: Math.max(10, prev.y - moveSpeed) }));
       found = true;
     } 
-    // Commands: Baisser
-    else if (
-      cmd.includes('baisser') || 
-      cmd.includes('baisse') || 
-      cmd.includes('baissez')
-    ) {
+    else if (cmd.includes('baisser') || cmd.includes('baisse') || cmd.includes('baissez')) {
       setDirection('down');
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
       found = true;
@@ -110,9 +97,7 @@ export default function HuntrixPage() {
         if (isListeningRef.current) {
           try {
             recognition.start();
-          } catch (e) {
-            // Quiet restart
-          }
+          } catch (e) {}
         } else {
           setIsListening(false);
           setIsHearingSound(false);
@@ -185,11 +170,11 @@ export default function HuntrixPage() {
 
   const getSpriteRow = () => {
     switch (direction) {
-      case 'up': return '100%';    // Row 3
-      case 'right': return '66.6%';  // Row 2
-      case 'left': return '33.3%';   // Row 1
-      case 'down': return '0%';      // Row 0
-      default: return '0%';          // Idle/Down
+      case 'up': return '100%';    
+      case 'right': return '66.6%';  
+      case 'left': return '33.3%';   
+      case 'down': return '0%';      
+      default: return '0%';          
     }
   };
 
@@ -299,14 +284,14 @@ export default function HuntrixPage() {
             
             <div className={`relative w-40 h-40 ${getAnimationClass()}`}>
               <div 
-                className="w-full h-full bg-no-repeat bg-[length:800%_400%] bg-center flex items-center justify-center"
+                className="w-full h-full bg-no-repeat bg-[length:800%_400%] bg-center flex items-center justify-center relative"
                 style={{ 
                   backgroundImage: "url('/huntrix-sprite.png')",
                   imageRendering: 'pixelated',
                   backgroundPositionY: getSpriteRow()
                 }}
               >
-                <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none opacity-20">
+                <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none opacity-20 absolute inset-0 flex items-center justify-center pointer-events-none">
                   🧙‍♂️
                 </div>
               </div>

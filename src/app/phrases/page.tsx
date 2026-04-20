@@ -1,10 +1,9 @@
-
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { MessageSquare, Sparkles, Languages, Loader2, Trash2, ArrowRight, Timer } from 'lucide-react';
+import { MessageSquare, Sparkles, Loader2, Trash2, ArrowRight, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -45,7 +44,7 @@ export default function PhrasesPage() {
 
   const { data: phrases, isLoading } = useCollection(phrasesRef);
 
-  const handleAddPhrase = async (englishText: string) => {
+  const handleAddPhrase = useCallback(async (englishText: string) => {
     if (!user || !firestore || cooldown > 0) return;
     
     setIsTranslating(true);
@@ -85,7 +84,7 @@ export default function PhrasesPage() {
     } finally {
       setIsTranslating(false);
     }
-  };
+  }, [user, firestore, cooldown, toast]);
 
   const handleDelete = (id: string) => {
     if (!user || !firestore) return;

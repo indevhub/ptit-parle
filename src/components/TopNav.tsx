@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -29,15 +28,12 @@ export function TopNav() {
       if (typeof window !== 'undefined') {
         const currentScrollY = window.scrollY;
         
-        // Always show at the very top
         if (currentScrollY < 10) {
           setIsVisible(true);
         } 
-        // Hide if scrolling down
         else if (currentScrollY > lastScrollY) {
           setIsVisible(false);
         } 
-        // Show if scrolling up
         else if (currentScrollY < lastScrollY) {
           setIsVisible(true);
         }
@@ -68,7 +64,6 @@ export function TopNav() {
         </Link>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Star Counter */}
           {user && (
             <div className="bg-yellow-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-yellow-200 animate-in zoom-in duration-500">
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
@@ -76,7 +71,6 @@ export function TopNav() {
             </div>
           )}
 
-          {/* Translation Toggle */}
           <Button 
             variant={showEnglish ? "default" : "outline"}
             size="sm" 

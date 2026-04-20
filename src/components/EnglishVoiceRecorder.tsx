@@ -1,8 +1,7 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square, Loader2 } from 'lucide-react';
+import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -14,13 +13,22 @@ interface EnglishVoiceRecorderProps {
 export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
-  const isInternalRecordingRef = useRef(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+  const startRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (SpeechRecognition && !recognitionRef.current) {
+    if (!SpeechRecognition) {
+       toast({ 
+         title: <TranslatedText fr="Désolé" en="Sorry" inline />, 
+         description: <TranslatedText fr="Ton navigateur ne supporte pas la dictée vocale." en="Your browser doesn't support voice dictation." inline /> 
+       });
+       return;
+    }
+
+    if (isRecording) return;
+
+    try {
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
@@ -29,7 +37,6 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
 
       recognition.onstart = () => {
         setIsRecording(true);
-        isInternalRecordingRef.current = true;
       };
 
       recognition.onresult = (event: any) => {
@@ -40,40 +47,29 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
       };
 
       recognition.onerror = (event: any) => {
-        isInternalRecordingRef.current = false;
         setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          toast({
+            variant: "destructive",
+            title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline />,
+            description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline />,
+          });
+        }
       };
       
       recognition.onend = () => {
-        isInternalRecordingRef.current = false;
         setIsRecording(false);
       };
 
       recognitionRef.current = recognition;
-    }
-  }, [onFinished]);
-
-  const startRecording = () => {
-    if (!recognitionRef.current) {
-       toast({ 
-         title: <TranslatedText fr="Désolé" en="Sorry" inline />, 
-         description: <TranslatedText fr="Ton navigateur ne supporte pas la dictée vocale." en="Your browser doesn't support voice dictation." inline /> 
-       });
-       return;
-    }
-    
-    if (isInternalRecordingRef.current) return;
-
-    try {
-      recognitionRef.current.start();
+      recognition.start();
     } catch (e) {
       setIsRecording(false);
-      isInternalRecordingRef.current = false;
     }
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current && isInternalRecordingRef.current) {
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
   };
