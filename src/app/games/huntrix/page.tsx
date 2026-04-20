@@ -8,6 +8,7 @@ import { ChevronLeft, Mic, MicOff, Info } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/context/TranslationContext';
 
 type Direction = 'left' | 'right' | 'up' | 'down' | 'idle';
 
@@ -18,6 +19,7 @@ export default function HuntrixPage() {
   const [lastCommand, setLastCommand] = useState('');
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+  const { showEnglish } = useTranslation();
 
   const moveSpeed = 5;
 
@@ -50,7 +52,7 @@ export default function HuntrixPage() {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'fr-FR'; // Default to French, but will detect English too
+      recognition.lang = 'fr-FR'; 
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[event.results.length - 1][0].transcript.trim();
@@ -62,8 +64,8 @@ export default function HuntrixPage() {
         if (event.error === 'not-allowed') {
           toast({
             variant: "destructive",
-            title: "Micro bloqué",
-            description: "Autorise le micro pour jouer à Huntrix !",
+            title: showEnglish ? "Micro bloqué (Mic blocked)" : "Micro bloqué",
+            description: showEnglish ? "Autorise le micro pour jouer à Huntrix ! (Allow mic to play Huntrix!)" : "Autorise le micro pour jouer à Huntrix !",
           });
           setIsListening(false);
         }
@@ -71,17 +73,20 @@ export default function HuntrixPage() {
 
       recognition.onend = () => {
         if (isListening) {
-          recognition.start(); // Auto-restart if we're supposed to be listening
+          recognition.start(); 
         }
       };
 
       recognitionRef.current = recognition;
     }
-  }, [handleCommand, isListening, toast]);
+  }, [handleCommand, isListening, toast, showEnglish]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      toast({ title: "Désolé", description: "Ton navigateur ne supporte pas Huntrix." });
+      toast({ 
+        title: showEnglish ? "Désolé (Sorry)" : "Désolé", 
+        description: showEnglish ? "Ton navigateur ne supporte pas Huntrix. (Your browser doesn't support Huntrix.)" : "Ton navigateur ne supporte pas Huntrix." 
+      });
       return;
     }
 
@@ -92,13 +97,12 @@ export default function HuntrixPage() {
       recognitionRef.current.start();
       setIsListening(true);
       toast({
-        title: "Huntrix Activé !",
-        description: "Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger !",
+        title: showEnglish ? "Huntrix Activé ! (Huntrix On!)" : "Huntrix Activé !",
+        description: showEnglish ? "Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger ! (Say 'Left', 'Right', 'Up' or 'Down' to move!)" : "Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger !",
       });
     }
   };
 
-  // Sprite animation logic based on direction
   const getSpriteClass = () => {
     switch (direction) {
       case 'left': return 'scale-x-[-1] animate-walk';
@@ -131,7 +135,6 @@ export default function HuntrixPage() {
       </header>
 
       <main className="flex-1 relative p-6">
-        {/* Game Area */}
         <div className="absolute inset-4 rounded-[3rem] border-4 border-dashed border-indigo-200 bg-white/50 card-shadow flex items-center justify-center">
           {!isListening && (
             <div className="text-center p-8 space-y-4 max-w-xs bg-white rounded-[2rem] card-shadow">
@@ -150,7 +153,6 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Instructions Overlay */}
           {isListening && (
             <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-none">
               <div className="bg-white/90 px-4 py-2 rounded-2xl text-xs font-bold text-indigo-600 shadow-sm border border-indigo-50">
@@ -164,7 +166,6 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Character */}
           <div 
             className="absolute transition-all duration-300 ease-out"
             style={{ 
@@ -174,7 +175,6 @@ export default function HuntrixPage() {
             }}
           >
             <div className={`relative w-24 h-24 ${getSpriteClass()}`}>
-              {/* Sprite Image - Using a placeholder for the user-provided sprite sheet */}
               <div 
                 className="w-full h-full bg-[url('https://picsum.photos/seed/huntrix/800/400')] bg-no-repeat bg-[length:800%_400%]"
                 style={{ 
@@ -210,7 +210,6 @@ export default function HuntrixPage() {
 
       <Navigation />
 
-      {/* Inline Styles for Sprite Animations */}
       <style jsx global>{`
         @keyframes walk {
           from { background-position-x: 0%; }

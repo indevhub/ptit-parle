@@ -94,7 +94,9 @@ export default function ListeningGamePage() {
             <ChevronLeft className="h-6 w-6 text-primary" />
           </Link>
           <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2">
-            <span className="font-bold text-primary uppercase text-sm">Score: {score}</span>
+            <span className="font-bold text-primary uppercase text-sm">
+              <TranslatedText fr={`Score: ${score}`} en={`Score: ${score}`} inline />
+            </span>
           </div>
           <button onClick={startNewRound} className="p-3 bg-white rounded-2xl card-shadow child-button">
             <RotateCcw className="h-6 w-6 text-muted-foreground" />

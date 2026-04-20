@@ -93,7 +93,9 @@ export default function MysteryWordsPage() {
             <ChevronLeft className="h-6 w-6 text-primary" />
           </Link>
           <div className="bg-accent/10 px-6 py-2 rounded-full flex items-center gap-2">
-            <span className="font-bold text-accent text-lg">Score: {score}/5</span>
+            <span className="font-bold text-accent text-lg">
+              <TranslatedText fr={`Score: ${score}/5`} en={`Score: ${score}/5`} inline />
+            </span>
           </div>
           <button onClick={startNewRound} className="p-3 bg-white rounded-2xl card-shadow child-button">
             <RotateCcw className="h-6 w-6 text-muted-foreground" />

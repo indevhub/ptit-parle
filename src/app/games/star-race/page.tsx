@@ -132,7 +132,7 @@ export default function StarRacePage() {
           <div className="bg-white p-4 rounded-2xl card-shadow flex items-center gap-3">
             <Timer className={`h-6 w-6 ${timeLeft < 10 ? 'text-destructive animate-pulse' : 'text-primary'}`} />
             <span className={`text-2xl font-black ${timeLeft < 10 ? 'text-destructive' : 'text-primary'}`}>
-              {timeLeft}s
+              {timeLeft}<TranslatedText fr="s" en="s" inline />
             </span>
           </div>
           <div className="bg-yellow-100 px-6 py-2 rounded-full flex items-center gap-2 border-2 border-yellow-200">
