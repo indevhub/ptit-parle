@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Mic, MicOff, Sparkles, Wand2 } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2 } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,16 @@ export default function HuntrixPage() {
   const { toast } = useToast();
 
   const moveSpeed = 10;
+
+  const playCommandAudio = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 0.8;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   const handleCommand = useCallback((command: string) => {
     const cmd = command.toLowerCase();
@@ -39,7 +49,6 @@ export default function HuntrixPage() {
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
     }
     
-    // Return to idle after animation loop
     setTimeout(() => setDirection('idle'), 1200);
   }, []);
 
@@ -105,8 +114,15 @@ export default function HuntrixPage() {
     }
   };
 
+  const commandButtons = [
+    { fr: 'Haut', en: 'Up', cmd: 'haut' },
+    { fr: 'Bas', en: 'Down', cmd: 'bas' },
+    { fr: 'Gauche', en: 'Left', cmd: 'gauche' },
+    { fr: 'Droite', en: 'Right', cmd: 'droite' },
+  ];
+
   return (
-    <div className="pb-24 min-h-screen bg-indigo-50/30 overflow-hidden flex flex-col">
+    <div className="pb-32 min-h-screen bg-indigo-50/30 overflow-hidden flex flex-col">
       <header className="p-6 max-w-screen-md mx-auto w-full flex items-center justify-between z-20">
         <Link href="/games" className="p-3 bg-white rounded-2xl shadow-xl child-button">
           <ChevronLeft className="h-6 w-6 text-indigo-600" />
@@ -125,7 +141,6 @@ export default function HuntrixPage() {
       <main className="flex-1 relative p-6">
         <div className="absolute inset-4 md:inset-10 rounded-[4rem] border-8 border-dashed border-indigo-200 bg-white/40 shadow-inner flex items-center justify-center overflow-hidden">
           
-          {/* Instructions Overlay */}
           {!isListening && (
             <div className="text-center p-12 space-y-8 max-w-md bg-white rounded-[3.5rem] shadow-2xl z-30 border-4 border-indigo-50 transform -rotate-1">
               <div className="bg-indigo-600 h-24 w-24 rounded-[2.5rem] flex items-center justify-center mx-auto text-white shadow-lg">
@@ -145,10 +160,9 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Active Voice Command Display */}
           {isListening && lastCommand && (
             <div className="absolute top-12 left-0 right-0 flex flex-col items-center pointer-events-none z-30 animate-in slide-in-from-top-10 duration-500">
-               <div className="bg-indigo-600 text-white px-12 py-6 rounded-[3rem] text-5xl font-black shadow-2xl border-8 border-white flex flex-col items-center">
+               <div className="bg-indigo-600 text-white px-12 py-6 rounded-[3rem] text-4xl md:text-5xl font-black shadow-2xl border-8 border-white flex flex-col items-center">
                   <span className="text-xs uppercase tracking-[0.3em] font-black opacity-80 mb-2">
                     <TranslatedText fr="HUNTRIX A ENTENDU :" en="HUNTRIX HEARD:" inline />
                   </span>
@@ -157,16 +171,14 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Background Decor */}
           <div className="absolute inset-0 opacity-10 pointer-events-none grid grid-cols-6 grid-rows-6">
              {Array.from({length: 36}).map((_, i) => (
                <div key={i} className="flex items-center justify-center">
-                 <Sparkles className="h-8 w-8 text-indigo-400" />
+                 <Sparkles key={i} className="h-8 w-8 text-indigo-400" />
                </div>
              ))}
           </div>
 
-          {/* The Player Character */}
           <div 
             className="absolute transition-all duration-700 ease-out z-20"
             style={{ 
@@ -175,31 +187,56 @@ export default function HuntrixPage() {
               transform: 'translate(-50%, -50%)'
             }}
           >
-            {/* Movement Glow */}
             <div className={`absolute inset-0 bg-indigo-400/40 rounded-full blur-[40px] transition-opacity duration-300 ${direction !== 'idle' ? 'opacity-100' : 'opacity-0'}`} />
             
             <div className={`relative w-40 h-40 ${getAnimationClass()}`}>
-              {/* Primary Sprite Layer */}
               <div 
-                className="w-full h-full bg-[url('/huntrix-sprite.png')] bg-no-repeat bg-[length:800%_400%] bg-center"
+                className="w-full h-full bg-no-repeat bg-[length:800%_400%] bg-center"
                 style={{ 
+                  backgroundImage: "url('/huntrix-sprite.png')",
                   imageRendering: 'pixelated',
-                  // Map directions to row indexes in the 4-row sheet
                   backgroundPositionY: direction === 'up' ? '100%' : direction === 'down' ? '75%' : direction === 'idle' ? '75%' : '0%'
                 }}
               >
-                {/* Visual wizard fallback if sprite sheet fails */}
                 <div className="w-full h-full flex flex-col items-center justify-center text-8xl transition-all duration-500 hover:scale-110">
+                   {/* Fallback Wizard Emoji if sprite fails to load */}
+                   <span className="sr-only">Character</span>
                    🧙‍♂️
                 </div>
               </div>
-              
-              {/* Dynamic Shadow */}
               <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-20 h-4 bg-black/20 rounded-full blur-sm" />
             </div>
           </div>
         </div>
       </main>
+
+      <footer className="fixed bottom-24 left-0 right-0 z-40 px-6">
+        <div className="max-w-screen-md mx-auto bg-white/80 backdrop-blur-xl p-4 rounded-[2.5rem] shadow-2xl border-t-4 border-indigo-100">
+          <div className="text-center mb-3">
+             <div className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
+               <TranslatedText fr="CLIQUE POUR ENTENDRE LES COMMANDES :" en="CLICK TO HEAR COMMANDS:" inline />
+             </div>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            {commandButtons.map((btn) => (
+              <Button
+                key={btn.fr}
+                onClick={() => playCommandAudio(btn.fr)}
+                variant="outline"
+                className="h-16 rounded-2xl flex flex-col items-center justify-center border-2 border-indigo-50 hover:bg-indigo-600 hover:text-white transition-all group"
+              >
+                <div className="flex items-center gap-1 mb-1">
+                  <Volume2 className="h-3 w-3 group-hover:animate-pulse" />
+                  <span className="font-black text-xs uppercase">{btn.fr}</span>
+                </div>
+                <div className="text-[9px] font-bold opacity-60">
+                   <TranslatedText fr="" en={btn.en} inline />
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </footer>
 
       <Navigation />
 
