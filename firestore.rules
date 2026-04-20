@@ -1,5 +1,5 @@
 
-// LAST UPDATED: 2026-04-20T04:35:00Z - FORCING RE-DEPLOYMENT FOR PERMISSIONS
+// LAST UPDATED: 2026-04-20T04:45:00Z - FORCING RE-DEPLOYMENT FOR PERMISSIONS
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -11,7 +11,6 @@ service cloud.firestore {
     // Explicit rules for family accounts and their sub-data
     match /users/{userId} {
       // Allow a family full access to their own account document
-      // Using 'write' as a robust catch-all for create/update/delete
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       
       // Allow a family full access to all nested learner profiles, custom images, etc.

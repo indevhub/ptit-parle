@@ -1,11 +1,11 @@
 
 "use client"
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -15,6 +15,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { doc, collection, deleteDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { generateWordImage } from '@/ai/flows/generate-image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function ImageGalleryPage() {
   const { user } = useUser();
@@ -23,6 +24,17 @@ export default function ImageGalleryPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState<number>(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   // Fetch all custom images for this user
   const customImagesRef = useMemoFirebase(() => {
@@ -45,7 +57,7 @@ export default function ImageGalleryPage() {
   };
 
   const handleGenerate = async (word: any) => {
-    if (!firestore || !user) return;
+    if (!firestore || !user || cooldown > 0) return;
     setProcessingId(word.id);
     
     try {
@@ -67,11 +79,20 @@ export default function ImageGalleryPage() {
       const errorMsg = error.message || 'Unknown error';
       console.error('Image Gallery Error:', error);
       
-      toast({
-        variant: "destructive",
-        title: <TranslatedText fr="La magie a échoué" en="Magic failed" inline noAudio />,
-        description: errorMsg,
-      });
+      if (errorMsg.includes('429') || errorMsg.includes('quota') || errorMsg.includes('limit')) {
+        setCooldown(60);
+        toast({
+          variant: "destructive",
+          title: <TranslatedText fr="Trop de magie !" en="Too much magic!" inline noAudio />,
+          description: <TranslatedText fr="L'artiste se repose un peu. Réessaye dans une minute." en="The artist is resting. Try again in a minute." inline noAudio />,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: <TranslatedText fr="La magie a échoué" en="Magic failed" inline noAudio />,
+          description: errorMsg,
+        });
+      }
     } finally {
       setProcessingId(null);
     }
@@ -136,6 +157,22 @@ export default function ImageGalleryPage() {
       </header>
 
       <main className="max-w-screen-md mx-auto p-6">
+        {cooldown > 0 && (
+          <Alert className="mb-6 bg-orange-50 border-orange-200 rounded-[2rem] shadow-lg animate-in slide-in-from-top-4 duration-500">
+            <Timer className="h-5 w-5 text-orange-600" />
+            <AlertTitle className="text-orange-950 font-black flex items-center gap-2">
+              <TranslatedText fr="Pause Magique" en="Magic Break" inline noAudio />
+              <span className="bg-orange-600 text-white px-3 py-0.5 rounded-full text-sm">{cooldown}s</span>
+            </AlertTitle>
+            <AlertDescription className="text-orange-800 font-bold">
+              <TranslatedText 
+                fr="L'artiste magique se repose un peu après avoir créé tant de dessins. On revient dans un instant !" 
+                en="The magic artist is taking a short rest after creating so many drawings. We'll be back in a moment!" 
+              />
+            </AlertDescription>
+          </Alert>
+        )}
+
         <input 
           type="file" 
           ref={fileInputRef} 
@@ -205,7 +242,7 @@ export default function ImageGalleryPage() {
                       <div className="grid grid-cols-2 gap-3 mt-6">
                         <Button
                           onClick={() => handleGenerate(word)}
-                          disabled={isProcessing}
+                          disabled={isProcessing || cooldown > 0}
                           className="rounded-2xl h-14 bg-accent hover:bg-accent/90 text-white font-bold shadow-lg gap-2"
                         >
                           <Wand2 className="h-5 w-5" />

@@ -25,27 +25,20 @@ export const generateWordImageFlow = ai.defineFlow(
     outputSchema: z.string().optional(),
   },
   async (input) => {
-    try {
-      // Using Gemini 2.5 Flash Image as requested (free tier multimodal generator)
-      const { media } = await ai.generate({
-        model: googleAI.model('gemini-2.5-flash-image'),
-        prompt: `A cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
-        config: {
-          // Critical: Gemini 2.5 Flash Image requires both TEXT and IMAGE modalities
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-      });
+    // No try/catch here, let the error propagate to the UI for better handling
+    const { media } = await ai.generate({
+      model: googleAI.model('gemini-2.5-flash-image'),
+      prompt: `A cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
+      config: {
+        // Critical: Gemini 2.5 Flash Image requires both TEXT and IMAGE modalities
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
+    });
 
-      if (!media) {
-        throw new Error('The magic mirror did not return an image. Please check your API quota or safety settings.');
-      }
-
-      return media.url;
-    } catch (error: any) {
-      console.error('Genkit Image Generation Error:', error);
-      // Propagate a meaningful error message to the UI
-      const errorMessage = error.message || 'Unknown magic failure';
-      throw new Error(`Génération échouée: ${errorMessage}`);
+    if (!media) {
+      throw new Error('The magic mirror did not return an image. Please check your API quota or safety settings.');
     }
+
+    return media.url;
   }
 );
