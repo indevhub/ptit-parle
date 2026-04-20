@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +20,9 @@ export default function HuntrixPage() {
   const [isHearingSound, setIsHearingSound] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
   const [feedback, setFeedback] = useState<FeedbackStatus>(null);
+  
   const recognitionRef = useRef<any>(null);
+  const isListeningRef = useRef(false);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -69,6 +71,7 @@ export default function HuntrixPage() {
     }, 1000);
   }, []);
 
+  // Stable initialization of SpeechRecognition
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
@@ -85,15 +88,17 @@ export default function HuntrixPage() {
 
       recognition.onstart = () => {
         setIsListening(true);
+        isListeningRef.current = true;
       };
 
       recognition.onend = () => {
-        // Force restart if we are still in listening mode
-        if (isListening && recognitionRef.current) {
+        // Use the ref to check if we should still be listening
+        // This avoids stale state issues in the callback
+        if (isListeningRef.current) {
           try {
-            recognitionRef.current.start();
+            recognition.start();
           } catch (e) {
-            // Silence restart errors
+            // Silently ignore if already started
           }
         } else {
           setIsListening(false);
@@ -101,7 +106,6 @@ export default function HuntrixPage() {
         }
       };
 
-      // Sensitive activity indicators
       recognition.onspeechstart = () => setIsHearingSound(true);
       recognition.onspeechend = () => setIsHearingSound(false);
       recognition.onaudiostart = () => setIsHearingSound(true);
@@ -110,6 +114,7 @@ export default function HuntrixPage() {
       recognition.onerror = (event: any) => {
         if (event.error === 'not-allowed') {
           setIsListening(false);
+          isListeningRef.current = false;
           toast({
             variant: "destructive",
             title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline />,
@@ -122,11 +127,12 @@ export default function HuntrixPage() {
     }
 
     return () => {
+      isListeningRef.current = false;
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
     };
-  }, [handleCommand, isListening, toast]);
+  }, [handleCommand, toast]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -139,10 +145,12 @@ export default function HuntrixPage() {
 
     if (isListening) {
       setIsListening(false);
+      isListeningRef.current = false;
       setIsHearingSound(false);
       recognitionRef.current.stop();
     } else {
       try {
+        isListeningRef.current = true;
         recognitionRef.current.start();
         setIsListening(true);
         toast({
@@ -151,6 +159,7 @@ export default function HuntrixPage() {
         });
       } catch (e) {
         setIsListening(false);
+        isListeningRef.current = false;
       }
     }
   };
@@ -210,7 +219,7 @@ export default function HuntrixPage() {
         <div className="absolute inset-4 md:inset-10 rounded-[4rem] border-8 border-dashed border-indigo-200 bg-white/40 shadow-inner flex items-center justify-center overflow-hidden">
           
           {!isListening && (
-            <div className="text-center p-12 space-y-8 max-w-md bg-white rounded-[3.5rem] shadow-2xl z-30 border-4 border-indigo-50 transform -rotate-1">
+            <div className="text-center p-12 space-y-8 max-w-md bg-white rounded-[3.5rem] shadow-2xl z-30 border-4 border-indigo-50 transform -rotate-1 animate-in zoom-in duration-300">
               <div className="bg-indigo-600 h-24 w-24 rounded-[2.5rem] flex items-center justify-center mx-auto text-white shadow-lg">
                 <Wand2 className="h-12 w-12 animate-pulse" />
               </div>
@@ -253,8 +262,12 @@ export default function HuntrixPage() {
              ))}
           </div>
 
+          {/* Character Container */}
           <div 
-            className="absolute transition-all duration-500 ease-out z-20"
+            className={cn(
+              "absolute transition-all duration-500 ease-out z-20",
+              !isListening && "hidden"
+            )}
             style={{ 
               left: `${pos.x}%`, 
               top: `${pos.y}%`,
@@ -269,15 +282,16 @@ export default function HuntrixPage() {
             
             <div className={`relative w-40 h-40 ${getAnimationClass()}`}>
               <div 
-                className="w-full h-full bg-no-repeat bg-[length:800%_400%] bg-center"
+                className="w-full h-full bg-no-repeat bg-[length:800%_400%] bg-center flex items-center justify-center"
                 style={{ 
                   backgroundImage: "url('/huntrix-sprite.png')",
                   imageRendering: 'pixelated',
                   backgroundPositionY: direction === 'up' ? '100%' : direction === 'down' ? '75%' : direction === 'idle' ? '75%' : '0%'
                 }}
               >
-                <div className="w-full h-full flex flex-col items-center justify-center transition-all duration-500 hover:scale-110">
-                   <div className="opacity-0 w-0 h-0">🧙‍♂️</div>
+                {/* Fallback Character (Visible if sprite fails to load) */}
+                <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none">
+                  🧙‍♂️
                 </div>
               </div>
               <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-20 h-4 bg-black/20 rounded-full blur-sm" />
