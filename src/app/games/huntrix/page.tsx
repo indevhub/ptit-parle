@@ -45,33 +45,38 @@ export default function HuntrixPage() {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
 
     let found = false;
-    // Enhanced detection with more keywords and phonetic variations
+    
+    // Commands: Left/Gauche
     if (cmd.includes('left') || cmd.includes('gauche')) {
       setDirection('left');
       setPos(prev => ({ ...prev, x: Math.max(10, prev.x - moveSpeed) }));
       found = true;
-    } else if (cmd.includes('right') || cmd.includes('droite')) {
+    } 
+    // Commands: Right/Droite
+    else if (cmd.includes('right') || cmd.includes('droite')) {
       setDirection('right');
       setPos(prev => ({ ...prev, x: Math.min(90, prev.x + moveSpeed) }));
       found = true;
-    } else if (
+    } 
+    // Commands: Up/Monter
+    else if (
       cmd.includes('up') || 
-      cmd.includes('haut') || 
-      cmd.includes('oh') || 
+      cmd.includes('monter') || 
       cmd.includes('monte') || 
-      cmd.includes('forward') || 
-      cmd.includes('devant')
+      cmd.includes('haut') ||
+      cmd.includes('montez')
     ) {
       setDirection('up');
       setPos(prev => ({ ...prev, y: Math.max(10, prev.y - moveSpeed) }));
       found = true;
-    } else if (
+    } 
+    // Commands: Down/Baisser
+    else if (
       cmd.includes('down') || 
-      cmd.includes('bas') || 
-      cmd.includes('bah') || 
-      cmd.includes('descend') || 
-      cmd.includes('backward') || 
-      cmd.includes('derrière')
+      cmd.includes('baisser') || 
+      cmd.includes('baisse') || 
+      cmd.includes('bas') ||
+      cmd.includes('descend')
     ) {
       setDirection('down');
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
@@ -118,7 +123,6 @@ export default function HuntrixPage() {
         }
       };
 
-      // Improved audio feedback triggers
       recognition.onspeechstart = () => setIsHearingSound(true);
       recognition.onspeechend = () => setIsHearingSound(false);
       recognition.onaudiostart = () => setIsHearingSound(true);
@@ -166,10 +170,6 @@ export default function HuntrixPage() {
         isListeningRef.current = true;
         recognitionRef.current.start();
         setIsListening(true);
-        toast({
-          title: <TranslatedText fr="Huntrix Activé !" en="Huntrix Active!" inline />,
-          description: <TranslatedText fr="Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' !" en="Say 'Left', 'Right', 'Up' or 'Down'!" inline />,
-        });
       } catch (e) {
         setIsListening(false);
         isListeningRef.current = false;
@@ -187,7 +187,6 @@ export default function HuntrixPage() {
     }
   };
 
-  // Sprite mapping: 0: Down, 1: Left, 2: Right, 3: Up
   const getSpriteRow = () => {
     switch (direction) {
       case 'up': return '100%';    // Row 3
@@ -199,8 +198,8 @@ export default function HuntrixPage() {
   };
 
   const commandButtons = [
-    { fr: 'Haut', en: 'Up', cmd: 'haut' },
-    { fr: 'Bas', en: 'Down', cmd: 'bas' },
+    { fr: 'Monter', en: 'Up', cmd: 'monter' },
+    { fr: 'Baisser', en: 'Down', cmd: 'baisser' },
     { fr: 'Gauche', en: 'Left', cmd: 'gauche' },
     { fr: 'Droite', en: 'Right', cmd: 'droite' },
   ];
@@ -297,7 +296,6 @@ export default function HuntrixPage() {
               transform: 'translate(-50%, -50%)'
             }}
           >
-            {/* Audio Indicator (Sound Aura) */}
             <div className={cn(
               "absolute inset-[-40px] bg-indigo-500/30 rounded-full blur-[40px] transition-all duration-300",
               isHearingSound ? 'opacity-100 scale-125 animate-pulse' : 'opacity-0 scale-100'
@@ -312,7 +310,6 @@ export default function HuntrixPage() {
                   backgroundPositionY: getSpriteRow()
                 }}
               >
-                {/* Fallback Character (Invisible but present if sprite loaded, or centered wizard) */}
                 <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none opacity-20">
                   🧙‍♂️
                 </div>
