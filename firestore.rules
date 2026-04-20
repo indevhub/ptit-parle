@@ -7,18 +7,18 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Updated: Explicit rules for account management
+    // Explicit rules for family accounts and their sub-data
     match /users/{userId} {
-      // Allow a user full access to their own data
+      // Allow a user full access (read/write) to their own root document and all nested data
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       
-      // Explicit recursive rules for all subcollections
+      // Recursive match for all learner profiles, magic phrases, etc.
       match /{allSubcollections=**} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
     }
 
-    // Lessons and vocabulary reference data (Read-Only)
+    // Lessons and vocabulary reference data (Read-Only for everyone)
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if false;
@@ -29,7 +29,7 @@ service cloud.firestore {
       }
     }
 
-    // Achievement reference data (Read-Only)
+    // Achievement reference data (Read-Only for everyone)
     match /achievements/{id} {
       allow read: if true;
       allow write: if false;
