@@ -25,7 +25,7 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     /**
-     * Using 'imagen-3' which is the official alias for the free tier model.
+     * Using 'googleai/imagen-3' which is the official alias for the free tier model.
      * Technical ID: imagen-3.0-generate-001
      * Reference: https://ai.google.dev/pricing
      */

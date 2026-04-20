@@ -16,6 +16,7 @@ import { doc, collection, deleteDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { generateWordImage } from '@/ai/flows/generate-image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 const MAX_MAGIC_ENERGY = 10; // Estimated hourly burst for free tier
 
