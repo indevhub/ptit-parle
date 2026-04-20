@@ -15,9 +15,10 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const startRecording = () => {
+    dismiss(); // Clear any existing toasts immediately
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {

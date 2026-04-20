@@ -26,7 +26,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   const [transcript, setTranscript] = useState<string>('');
   
   const recognitionRef = useRef<any>(null);
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   // Initialize word statuses from targetPhrase
   const targetWords = useMemo(() => {
@@ -129,6 +129,7 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
   }, [targetWords, onSuccess, toast, isRecording]);
 
   const startRecording = () => {
+    dismiss(); // Immediately clear any active toasts to avoid interference
     if (!recognitionRef.current) {
       toast({ 
         title: <TranslatedText fr="Désolé" en="Sorry" inline />, 

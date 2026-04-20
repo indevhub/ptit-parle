@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -23,7 +24,7 @@ export default function HuntrixPage() {
   const recognitionRef = useRef<any>(null);
   const isListeningRef = useRef(false);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const moveSpeed = 15;
 
@@ -147,6 +148,7 @@ export default function HuntrixPage() {
       setIsHearingSound(false);
       recognitionRef.current.stop();
     } else {
+      dismiss(); // Clear any toasts before starting listening mode
       try {
         isListeningRef.current = true;
         recognitionRef.current.start();
@@ -249,7 +251,7 @@ export default function HuntrixPage() {
               <div className="flex items-center gap-3 text-white">
                 {feedback === 'success' ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase opacity-80 tracking-widest">
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-80">
                     <TranslatedText fr="J'ai entendu :" en="I heard:" inline />
                   </span>
                   <span className="font-black text-xl">"{lastCommand.toUpperCase()}"</span>
