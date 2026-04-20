@@ -10,7 +10,6 @@ interface TranslatedTextProps {
   className?: string;
   enClassName?: string;
   inline?: boolean;
-  enColorInherit?: boolean;
 }
 
 /**
@@ -21,9 +20,9 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
   const { showEnglish } = useTranslation();
   
   // We ensure the English text inherits the exact same color as the French text
-  // by not applying any default muted colors or lower opacity.
+  // by using text-inherit and bold styling. No grey/muted colors are allowed.
   const englishStyle = cn(
-    "font-bold italic animate-in fade-in slide-in-from-top-1",
+    "font-bold italic animate-in fade-in slide-in-from-top-1 text-inherit",
     inline ? "ml-1" : "text-[0.85em] leading-tight mt-1",
     enClassName
   );

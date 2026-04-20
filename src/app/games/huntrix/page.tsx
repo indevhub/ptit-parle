@@ -58,25 +58,21 @@ export default function HuntrixPage() {
       setPos(prev => ({ ...prev, x: Math.min(90, prev.x + moveSpeed) }));
       found = true;
     } 
-    // Commands: Up/Monter
+    // Commands: Monter
     else if (
-      cmd.includes('up') || 
       cmd.includes('monter') || 
       cmd.includes('monte') || 
-      cmd.includes('haut') ||
       cmd.includes('montez')
     ) {
       setDirection('up');
       setPos(prev => ({ ...prev, y: Math.max(10, prev.y - moveSpeed) }));
       found = true;
     } 
-    // Commands: Down/Baisser
+    // Commands: Baisser
     else if (
-      cmd.includes('down') || 
       cmd.includes('baisser') || 
       cmd.includes('baisse') || 
-      cmd.includes('bas') ||
-      cmd.includes('descend')
+      cmd.includes('baissez')
     ) {
       setDirection('down');
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
@@ -115,7 +111,7 @@ export default function HuntrixPage() {
           try {
             recognition.start();
           } catch (e) {
-            // Silently ignore
+            // Quiet restart
           }
         } else {
           setIsListening(false);
@@ -337,10 +333,9 @@ export default function HuntrixPage() {
               >
                 <div className="flex items-center gap-1 mb-1">
                   <Volume2 className="h-3 w-3 group-hover:animate-pulse" />
-                  <span className="font-black text-xs uppercase">{btn.fr}</span>
-                </div>
-                <div className="text-[9px] font-bold opacity-60">
-                   <TranslatedText fr="" en={btn.en} inline />
+                  <span className="font-black text-xs uppercase text-inherit">
+                    <TranslatedText fr={btn.fr} en={btn.en} inline />
+                  </span>
                 </div>
               </Button>
             ))}
