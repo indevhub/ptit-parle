@@ -19,13 +19,9 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
-        },
-        "isAnonymous": {
-          "type": "boolean",
-          "description": "Whether this is a temporary device-only account."
         }
       },
-      "required": ["uid", "createdAt", "isAnonymous"]
+      "required": ["uid", "createdAt"]
     },
     "LearnerProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -197,8 +193,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
