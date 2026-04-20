@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use } from 'react';
@@ -25,8 +24,6 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // CRITICAL: We MUST stay in loading state if user auth OR data fetch is still active.
-  // We only proceed if isUserLoading and isLoading are both false, and we have a ref attempt.
   if (isUserLoading || isLoading || !phraseRef) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
@@ -40,7 +37,6 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // If loading is complete but no phrase exists, THEN it's a 404
   if (!phrase) {
     return notFound();
   }
@@ -77,13 +73,13 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
         </header>
 
         <main className="flex-1 space-y-8">
-          <div className="bg-white rounded-[3rem] p-10 card-shadow text-center space-y-4">
-             <div className="text-4xl md:text-5xl font-bold text-primary leading-tight">
-               {phrase.frenchText}
-             </div>
-             <div className="text-xl text-muted-foreground italic">
-               {phrase.englishText}
-             </div>
+          <div className="bg-white rounded-[3rem] p-10 card-shadow text-center">
+             <TranslatedText 
+               fr={phrase.frenchText} 
+               en={phrase.englishText} 
+               className="text-4xl md:text-5xl font-bold text-primary leading-tight"
+               enClassName="text-xl italic mt-2"
+             />
           </div>
 
           <div className="bg-white/80 rounded-[3rem] p-8 card-shadow space-y-12">

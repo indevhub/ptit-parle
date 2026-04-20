@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { use } from 'react';
@@ -22,13 +21,10 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
-  // If word is not in the static list, it's a definitive 404
   if (!word) {
     return notFound();
   }
 
-  // CRITICAL: We MUST stay in loading state if auth session is still initializing
-  // This prevents the page from flashing "notFound" before the user is ready.
   if (isUserLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
@@ -104,7 +100,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute bottom-8 left-0 right-0 text-center">
                <div className="text-white text-5xl font-bold px-4">
-                 <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+                 <TranslatedText fr={word.french} en={word.english} enClassName="text-white" />
                </div>
             </div>
           </div>

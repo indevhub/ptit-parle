@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -131,12 +130,12 @@ export default function PhrasesPage() {
                          <MessageSquare className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-primary leading-tight">
-                          {phrase.frenchText}
-                        </h3>
-                        <p className="text-sm text-muted-foreground italic">
-                          {phrase.englishText}
-                        </p>
+                        <TranslatedText 
+                          fr={phrase.frenchText} 
+                          en={phrase.englishText} 
+                          className="text-xl font-bold text-primary leading-tight"
+                          enClassName="text-sm italic"
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-1">

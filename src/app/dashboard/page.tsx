@@ -95,6 +95,7 @@ export default function DashboardPage() {
                         src={imgData.url}
                         alt={word.english}
                         fill
+                        priority
                         sizes="(max-width: 768px) 100vw, 400px"
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                         data-ai-hint={imgData.hint}
@@ -102,7 +103,7 @@ export default function DashboardPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute bottom-4 left-4">
                         <div className="text-white text-2xl font-bold">
-                          <TranslatedText fr={word.french} en={word.english} enClassName="text-white/80" />
+                          <TranslatedText fr={word.french} en={word.english} enClassName="text-white" />
                         </div>
                       </div>
                     </div>

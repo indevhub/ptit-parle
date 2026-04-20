@@ -16,8 +16,8 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
   
   if (inline) {
     return (
-      <span className={className}>
-        {fr} {showEnglish && <span className={cn("text-muted-foreground ml-1 font-normal opacity-70 italic", enClassName)}>({en})</span>}
+      <span className={cn("inline", className)}>
+        {fr} {showEnglish && <span className={cn("ml-1 font-normal italic", enClassName)}>({en})</span>}
       </span>
     );
   }
@@ -26,7 +26,7 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
     <span className={cn("flex flex-col", className)}>
       <span>{fr}</span>
       {showEnglish && (
-        <span className={cn("text-[0.8em] leading-tight font-medium text-muted-foreground animate-in fade-in slide-in-from-top-1", enClassName)}>
+        <span className={cn("text-[0.85em] leading-tight font-medium animate-in fade-in slide-in-from-top-1", enClassName)}>
           {en}
         </span>
       )}
