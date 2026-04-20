@@ -4,19 +4,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2 } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type Direction = 'left' | 'right' | 'up' | 'down' | 'idle';
+type FeedbackStatus = 'success' | 'error' | null;
 
 export default function HuntrixPage() {
   const [pos, setPos] = useState({ x: 50, y: 50 });
   const [direction, setDirection] = useState<Direction>('idle');
   const [isListening, setIsListening] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
+  const [feedback, setFeedback] = useState<FeedbackStatus>(null);
   const recognitionRef = useRef<any>(null);
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const moveSpeed = 10;
@@ -34,22 +38,34 @@ export default function HuntrixPage() {
   const handleCommand = useCallback((command: string) => {
     const cmd = command.toLowerCase();
     setLastCommand(command);
+    
+    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
 
+    let found = false;
     if (cmd.includes('left') || cmd.includes('gauche')) {
       setDirection('left');
       setPos(prev => ({ ...prev, x: Math.max(10, prev.x - moveSpeed) }));
+      found = true;
     } else if (cmd.includes('right') || cmd.includes('droite')) {
       setDirection('right');
       setPos(prev => ({ ...prev, x: Math.min(90, prev.x + moveSpeed) }));
+      found = true;
     } else if (cmd.includes('up') || cmd.includes('haut') || cmd.includes('forward') || cmd.includes('devant')) {
       setDirection('up');
       setPos(prev => ({ ...prev, y: Math.max(10, prev.y - moveSpeed) }));
+      found = true;
     } else if (cmd.includes('down') || cmd.includes('bas') || cmd.includes('backward') || cmd.includes('derrière')) {
       setDirection('down');
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
+      found = true;
     }
     
-    setTimeout(() => setDirection('idle'), 1200);
+    setFeedback(found ? 'success' : 'error');
+    
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setFeedback(null);
+      setDirection('idle');
+    }, 1500);
   }, []);
 
   useEffect(() => {
@@ -74,9 +90,21 @@ export default function HuntrixPage() {
         }
       };
 
+      recognition.onerror = (event: any) => {
+        // Suppressing console errors for speech interruptions
+        if (event.error === 'not-allowed') {
+          setIsListening(false);
+          toast({
+            variant: "destructive",
+            title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline />,
+            description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline />,
+          });
+        }
+      };
+
       recognitionRef.current = recognition;
     }
-  }, [handleCommand, isListening]);
+  }, [handleCommand, isListening, toast]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -90,6 +118,7 @@ export default function HuntrixPage() {
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+      setFeedback(null);
     } else {
       try {
         recognitionRef.current.start();
@@ -160,21 +189,28 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {isListening && lastCommand && (
-            <div className="absolute top-12 left-0 right-0 flex flex-col items-center pointer-events-none z-30 animate-in slide-in-from-top-10 duration-500">
-               <div className="bg-indigo-600 text-white px-12 py-6 rounded-[3rem] text-4xl md:text-5xl font-black shadow-2xl border-8 border-white flex flex-col items-center">
-                  <span className="text-xs uppercase tracking-[0.3em] font-black opacity-80 mb-2">
-                    <TranslatedText fr="HUNTRIX A ENTENDU :" en="HUNTRIX HEARD:" inline />
+          {/* Quick Corner Feedback Card */}
+          {feedback && (
+            <div className={cn(
+              "absolute top-8 right-8 z-40 p-4 rounded-[2rem] shadow-2xl border-4 border-white animate-in slide-in-from-right-10 duration-300",
+              feedback === 'success' ? "bg-green-500" : "bg-destructive"
+            )}>
+              <div className="flex items-center gap-3 text-white">
+                {feedback === 'success' ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase opacity-80 tracking-widest">
+                    <TranslatedText fr="J'ai entendu :" en="I heard:" inline />
                   </span>
-                  {lastCommand.toUpperCase()}
-               </div>
+                  <span className="font-black text-lg">"{lastCommand.toUpperCase()}"</span>
+                </div>
+              </div>
             </div>
           )}
 
           <div className="absolute inset-0 opacity-10 pointer-events-none grid grid-cols-6 grid-rows-6">
              {Array.from({length: 36}).map((_, i) => (
                <div key={i} className="flex items-center justify-center">
-                 <Sparkles key={i} className="h-8 w-8 text-indigo-400" />
+                 <Sparkles className="h-8 w-8 text-indigo-400" />
                </div>
              ))}
           </div>
@@ -199,7 +235,6 @@ export default function HuntrixPage() {
                 }}
               >
                 <div className="w-full h-full flex flex-col items-center justify-center text-8xl transition-all duration-500 hover:scale-110">
-                   {/* Fallback Wizard Emoji if sprite fails to load */}
                    <span className="sr-only">Character</span>
                    🧙‍♂️
                 </div>
