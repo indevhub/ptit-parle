@@ -39,12 +39,13 @@ export default function HuntrixPage() {
   };
 
   const handleCommand = useCallback((command: string) => {
-    const cmd = command.toLowerCase();
+    const cmd = command.toLowerCase().trim();
     setLastCommand(command);
     
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
 
     let found = false;
+    // Enhanced detection with more keywords and phonetic variations
     if (cmd.includes('left') || cmd.includes('gauche')) {
       setDirection('left');
       setPos(prev => ({ ...prev, x: Math.max(10, prev.x - moveSpeed) }));
@@ -53,11 +54,25 @@ export default function HuntrixPage() {
       setDirection('right');
       setPos(prev => ({ ...prev, x: Math.min(90, prev.x + moveSpeed) }));
       found = true;
-    } else if (cmd.includes('up') || cmd.includes('haut') || cmd.includes('forward') || cmd.includes('devant')) {
+    } else if (
+      cmd.includes('up') || 
+      cmd.includes('haut') || 
+      cmd.includes('oh') || 
+      cmd.includes('monte') || 
+      cmd.includes('forward') || 
+      cmd.includes('devant')
+    ) {
       setDirection('up');
       setPos(prev => ({ ...prev, y: Math.max(10, prev.y - moveSpeed) }));
       found = true;
-    } else if (cmd.includes('down') || cmd.includes('bas') || cmd.includes('backward') || cmd.includes('derrière')) {
+    } else if (
+      cmd.includes('down') || 
+      cmd.includes('bas') || 
+      cmd.includes('bah') || 
+      cmd.includes('descend') || 
+      cmd.includes('backward') || 
+      cmd.includes('derrière')
+    ) {
       setDirection('down');
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
       found = true;
@@ -68,10 +83,9 @@ export default function HuntrixPage() {
     feedbackTimeoutRef.current = setTimeout(() => {
       setFeedback(null);
       setDirection('idle');
-    }, 1000);
+    }, 1200);
   }, []);
 
-  // Stable initialization of SpeechRecognition
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
@@ -92,13 +106,11 @@ export default function HuntrixPage() {
       };
 
       recognition.onend = () => {
-        // Use the ref to check if we should still be listening
-        // This avoids stale state issues in the callback
         if (isListeningRef.current) {
           try {
             recognition.start();
           } catch (e) {
-            // Silently ignore if already started
+            // Silently ignore
           }
         } else {
           setIsListening(false);
@@ -106,6 +118,7 @@ export default function HuntrixPage() {
         }
       };
 
+      // Improved audio feedback triggers
       recognition.onspeechstart = () => setIsHearingSound(true);
       recognition.onspeechend = () => setIsHearingSound(false);
       recognition.onaudiostart = () => setIsHearingSound(true);
@@ -174,6 +187,17 @@ export default function HuntrixPage() {
     }
   };
 
+  // Sprite mapping: 0: Down, 1: Left, 2: Right, 3: Up
+  const getSpriteRow = () => {
+    switch (direction) {
+      case 'up': return '100%';    // Row 3
+      case 'right': return '66.6%';  // Row 2
+      case 'left': return '33.3%';   // Row 1
+      case 'down': return '0%';      // Row 0
+      default: return '0%';          // Idle/Down
+    }
+  };
+
   const commandButtons = [
     { fr: 'Haut', en: 'Up', cmd: 'haut' },
     { fr: 'Bas', en: 'Down', cmd: 'bas' },
@@ -192,10 +216,10 @@ export default function HuntrixPage() {
             "h-4 w-4 rounded-full transition-all duration-300",
             !isListening ? "bg-red-500" : isHearingSound ? "bg-green-400 scale-150 animate-pulse" : "bg-green-600"
           )} />
-          <span className="font-black text-indigo-900 uppercase tracking-widest text-xs">
+          <span className="font-black text-indigo-950 uppercase tracking-widest text-xs">
             <TranslatedText 
               fr={isListening ? (isHearingSound ? "J'écoute..." : "Prêt !") : "Micro Coupé"} 
-              en={isListening ? (isHearingSound ? "Hearing you..." : "Mic Off") : "Mic Off"} 
+              en={isListening ? (isHearingSound ? "Hearing you..." : "Ready!") : "Mic Off"} 
               inline 
             />
           </span>
@@ -248,7 +272,7 @@ export default function HuntrixPage() {
                   <span className="text-[10px] font-black uppercase opacity-80 tracking-widest">
                     <TranslatedText fr="J'ai entendu :" en="I heard:" inline />
                   </span>
-                  <span className="font-black text-lg">"{lastCommand.toUpperCase()}"</span>
+                  <span className="font-black text-xl">"{lastCommand.toUpperCase()}"</span>
                 </div>
               </div>
             </div>
@@ -262,7 +286,6 @@ export default function HuntrixPage() {
              ))}
           </div>
 
-          {/* Character Container */}
           <div 
             className={cn(
               "absolute transition-all duration-500 ease-out z-20",
@@ -286,11 +309,11 @@ export default function HuntrixPage() {
                 style={{ 
                   backgroundImage: "url('/huntrix-sprite.png')",
                   imageRendering: 'pixelated',
-                  backgroundPositionY: direction === 'up' ? '100%' : direction === 'down' ? '75%' : direction === 'idle' ? '75%' : '0%'
+                  backgroundPositionY: getSpriteRow()
                 }}
               >
-                {/* Fallback Character (Visible if sprite fails to load) */}
-                <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none">
+                {/* Fallback Character (Invisible but present if sprite loaded, or centered wizard) */}
+                <div className="text-6xl filter drop-shadow-lg group-hover:scale-110 transition-transform select-none opacity-20">
                   🧙‍♂️
                 </div>
               </div>
