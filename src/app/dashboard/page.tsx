@@ -1,31 +1,43 @@
 "use client"
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, LogOut } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
+  const [profileId, setProfileId] = useState<string | null>(null);
 
-  const profilesRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'learnerProfiles');
-  }, [firestore, user]);
+  useEffect(() => {
+    const activeId = localStorage.getItem('activeProfileId');
+    if (!activeId && !isUserLoading) {
+      router.push('/');
+    } else {
+      setProfileId(activeId);
+    }
+  }, [isUserLoading, router]);
 
-  const { data: profiles, isLoading: isProfilesLoading } = useCollection(profilesRef);
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+  }, [firestore, user, profileId]);
 
-  const activeProfile = profiles?.[0];
-  const learnedCount = 3; 
+  const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
+
+  const learnedCount = 3; // Static for demo, could be calculated from vocabularyProgresses subcollection
 
   const getPlaceholderData = (id: string) => {
     const placeholder = PlaceHolderImages.find(img => img.id === id);
@@ -35,7 +47,12 @@ export default function DashboardPage() {
     };
   };
 
-  if (isUserLoading || isProfilesLoading) {
+  const handleSwitchProfile = () => {
+    localStorage.removeItem('activeProfileId');
+    router.push('/');
+  };
+
+  if (isUserLoading || isProfileLoading || !profileId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -45,20 +62,25 @@ export default function DashboardPage() {
 
   return (
     <div className="pb-24 min-h-screen">
-      <header className="p-6 md:p-10 bg-white card-shadow rounded-b-[3rem]">
-        <div className="max-w-screen-md mx-auto">
-          <h1 className="text-3xl font-bold text-primary mb-1">
-            <TranslatedText 
-              fr={`Salut, ${activeProfile?.name || 'Explorateur'} ! 👋`} 
-              en={`Hi, ${activeProfile?.name || 'Explorer'}! 👋`} 
-            />
-          </h1>
-          <div className="text-muted-foreground font-medium">
-            <TranslatedText 
-              fr="Prêt pour une nouvelle aventure ?" 
-              en="Ready for a new adventure?" 
-            />
+      <header className="p-6 md:p-10 bg-white shadow-xl rounded-b-[3rem]">
+        <div className="max-w-screen-md mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-primary mb-1">
+              <TranslatedText 
+                fr={`Salut, ${activeProfile?.name || 'Explorateur'} ! 👋`} 
+                en={`Hi, ${activeProfile?.name || 'Explorer'}! 👋`} 
+              />
+            </h1>
+            <div className="text-muted-foreground font-medium">
+              <TranslatedText 
+                fr="Prêt pour une nouvelle aventure ?" 
+                en="Ready for a new adventure?" 
+              />
+            </div>
           </div>
+          <Button variant="ghost" size="icon" onClick={handleSwitchProfile} className="rounded-2xl text-muted-foreground hover:text-primary">
+            <LogOut className="h-6 w-6" />
+          </Button>
         </div>
       </header>
 
@@ -73,7 +95,7 @@ export default function DashboardPage() {
               {learnedCount}/{VOCABULARY.length} <TranslatedText fr="mots" en="words" inline />
             </span>
           </div>
-          <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden">
+          <Card className="rounded-[2rem] border-none shadow-lg bg-white overflow-hidden">
             <CardContent className="p-6">
               <Progress value={(learnedCount / VOCABULARY.length) * 100} className="h-4 bg-muted" />
             </CardContent>
@@ -89,7 +111,7 @@ export default function DashboardPage() {
               const imgData = getPlaceholderData(word.imageId);
               return (
                 <Link key={word.id} href={`/learning/${word.id}`}>
-                  <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group">
+                  <Card className="rounded-[2rem] border-none shadow-lg bg-white overflow-hidden child-button cursor-pointer group">
                     <div className="relative h-40 w-full">
                       <Image
                         src={imgData.url}

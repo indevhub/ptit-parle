@@ -16,13 +16,25 @@ import { useToast } from '@/hooks/use-toast';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useRouter } from 'next/navigation';
 
 export default function PhrasesPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
   const [isTranslating, setIsTranslating] = useState(false);
   const [cooldown, setCooldown] = useState<number>(0);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const activeId = localStorage.getItem('activeProfileId');
+    if (!activeId && !isUserLoading) {
+      router.push('/');
+    } else {
+      setProfileId(activeId);
+    }
+  }, [isUserLoading, router]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -35,23 +47,23 @@ export default function PhrasesPage() {
   }, [cooldown]);
 
   const phrasesRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user || !profileId) return null;
     return query(
-      collection(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner', 'phrases'),
+      collection(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases'),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user]);
+  }, [firestore, user, profileId]);
 
   const { data: phrases, isLoading } = useCollection(phrasesRef);
 
   const handleAddPhrase = useCallback(async (englishText: string) => {
-    if (!user || !firestore || cooldown > 0) return;
+    if (!user || !firestore || !profileId || cooldown > 0) return;
     
     setIsTranslating(true);
     try {
       const result = await translatePhrase({ englishText });
       const phraseId = Math.random().toString(36).substring(7);
-      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner', 'phrases', phraseId);
+      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', phraseId);
       
       setDocumentNonBlocking(phraseRef, {
         id: phraseId,
@@ -84,29 +96,37 @@ export default function PhrasesPage() {
     } finally {
       setIsTranslating(false);
     }
-  }, [user, firestore, cooldown, toast]);
+  }, [user, firestore, profileId, cooldown, toast]);
 
   const handleDelete = (id: string) => {
-    if (!user || !firestore) return;
-    const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner', 'phrases', id);
+    if (!user || !firestore || !profileId) return;
+    const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', id);
     deleteDocumentNonBlocking(phraseRef);
   };
 
   const handleSuccess = (phraseId: string) => {
-    if (user && firestore) {
-      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner');
+    if (user && firestore && profileId) {
+      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(2),
         lastActiveAt: new Date().toISOString(),
       });
-      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner', 'phrases', phraseId);
+      const phraseRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', phraseId);
       updateDocumentNonBlocking(phraseRef, { isMastered: true });
     }
   };
 
+  if (isUserLoading || !profileId) {
+    return (
+      <div className="flex justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="pb-24 min-h-screen">
-      <header className="p-10 bg-white card-shadow rounded-b-[3rem]">
+      <header className="p-10 bg-white shadow-xl rounded-b-[3rem]">
         <div className="max-w-screen-md mx-auto">
           <h1 className="text-3xl font-bold text-primary mb-4 flex items-center gap-3">
              <Sparkles className="h-8 w-8 text-accent" />
@@ -159,7 +179,7 @@ export default function PhrasesPage() {
         ) : phrases && phrases.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             {phrases.map((phrase) => (
-              <Card key={phrase.id} className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden relative group">
+              <Card key={phrase.id} className="rounded-[2rem] border-none shadow-lg bg-white overflow-hidden relative group">
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">

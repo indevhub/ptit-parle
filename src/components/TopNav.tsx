@@ -1,25 +1,32 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Languages, Star, Sparkles } from 'lucide-react';
+import { Languages, Star, Sparkles, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/context/TranslationContext';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 export function TopNav() {
   const { toggleEnglish, showEnglish } = useTranslation();
   const { user } = useUser();
   const firestore = useFirestore();
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setProfileId(localStorage.getItem('activeProfileId'));
+  }, [pathname]);
 
   const profileRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner');
-  }, [firestore, user]);
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+  }, [firestore, user, profileId]);
 
   const { data: profile } = useDoc(profileRef);
 
@@ -27,26 +34,22 @@ export function TopNav() {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
         const currentScrollY = window.scrollY;
-        
         if (currentScrollY < 10) {
           setIsVisible(true);
-        } 
-        else if (currentScrollY > lastScrollY) {
+        } else if (currentScrollY > lastScrollY) {
           setIsVisible(false);
-        } 
-        else if (currentScrollY < lastScrollY) {
+        } else if (currentScrollY < lastScrollY) {
           setIsVisible(true);
         }
-        
         setLastScrollY(currentScrollY);
       }
     };
-
     window.addEventListener('scroll', controlNavbar);
-    return () => {
-      window.removeEventListener('scroll', controlNavbar);
-    };
+    return () => window.removeEventListener('scroll', controlNavbar);
   }, [lastScrollY]);
+
+  // Hide TopNav on the landing/profile picker page
+  if (pathname === '/') return null;
 
   return (
     <nav 
@@ -64,12 +67,18 @@ export function TopNav() {
         </Link>
 
         <div className="flex items-center gap-2 md:gap-4">
-          {user && (
+          {profile && (
             <div className="bg-yellow-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-yellow-200 animate-in zoom-in duration-500">
               <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
               <span className="font-bold text-yellow-700 text-sm">{profile?.totalStarsEarned || 0}</span>
             </div>
           )}
+
+          <Link href="/">
+             <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary">
+               <UserCircle className="h-6 w-6" />
+             </Button>
+          </Link>
 
           <Button 
             variant={showEnglish ? "default" : "outline"}

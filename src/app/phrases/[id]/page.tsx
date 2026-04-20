@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { use } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
@@ -11,22 +10,32 @@ import { TranslatedText } from '@/components/TranslatedText';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 
 export default function PhraseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeId = localStorage.getItem('activeProfileId');
+    if (!activeId && !isUserLoading) {
+      router.push('/');
+    } else {
+      setProfileId(activeId);
+    }
+  }, [isUserLoading, router]);
 
   const phraseRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner', 'phrases', id);
-  }, [firestore, user, id]);
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'phrases', id);
+  }, [firestore, user, profileId, id]);
 
   const { data: phrase, isLoading } = useDoc(phraseRef);
 
-  // Loading state guards
-  if (isUserLoading || isLoading || !phraseRef) {
+  if (isUserLoading || isLoading || !phraseRef || !profileId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F6F8FD]">
         <div className="flex flex-col items-center gap-6">
@@ -39,14 +48,13 @@ export default function PhraseDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  // If loading is finished and phrase is still null, then it's a 404
   if (!phrase) {
     return notFound();
   }
 
   const handlePronunciationSuccess = () => {
-    if (user && firestore) {
-      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', 'main-learner');
+    if (user && firestore && profileId) {
+      const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
       updateDocumentNonBlocking(profileRef, {
         totalStarsEarned: increment(2),
         lastActiveAt: new Date().toISOString(),

@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { use } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { VOCABULARY } from '@/app/data/lessons';
 import { AudioPlayer } from '@/components/AudioPlayer';
@@ -10,7 +9,7 @@ import { ChevronLeft, Info, Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
@@ -21,14 +20,23 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   const word = VOCABULARY.find(w => w.id === id);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
+  const [profileId, setProfileId] = useState<string | null>(null);
 
-  // If word is not in static data, it truly doesn't exist
+  useEffect(() => {
+    const activeId = localStorage.getItem('activeProfileId');
+    if (!activeId && !isUserLoading) {
+      router.push('/');
+    } else {
+      setProfileId(activeId);
+    }
+  }, [isUserLoading, router]);
+
   if (!word) {
     return notFound();
   }
 
-  // Loading state for user session
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || !profileId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6F8]">
         <div className="flex flex-col items-center gap-6">
@@ -42,8 +50,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
   }
 
   const handlePronunciationSuccess = () => {
-    if (user && firestore) {
-      const profileId = 'main-learner';
+    if (user && firestore && profileId) {
       const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
       
       updateDocumentNonBlocking(profileRef, {

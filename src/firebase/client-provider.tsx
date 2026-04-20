@@ -4,8 +4,6 @@ import React, { useMemo, useEffect, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
@@ -16,33 +14,17 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
     return initializeFirebase();
   }, []);
 
-  // Ensure every visitor has an anonymous session immediately
+  // Ensure every visitor has an anonymous session immediately for "no-auth" experience
   useEffect(() => {
     const auth = firebaseServices.auth;
-    const db = firebaseServices.firestore;
     
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
         initiateAnonymousSignIn(auth);
-      } else {
-        // Ensure the "main-learner" profile exists for the current user globally
-        const profileId = 'main-learner';
-        const profileRef = doc(db, 'users', user.uid, 'learnerProfiles', profileId);
-        
-        // We use setDocumentNonBlocking with merge:true to ensure the document exists
-        // without accidentally wiping out existing progress if it's already there.
-        setDocumentNonBlocking(profileRef, {
-          id: profileId,
-          name: 'Explorateur',
-          // We don't overwrite totalStarsEarned if it exists by using merge: true
-          totalStarsEarned: 0,
-          currentTheme: 'Default',
-          lastActiveAt: new Date().toISOString(),
-        }, { merge: true });
       }
     });
     return () => unsubscribe();
-  }, [firebaseServices.auth, firebaseServices.firestore]);
+  }, [firebaseServices.auth]);
 
   return (
     <FirebaseProvider
