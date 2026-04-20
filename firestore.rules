@@ -13,8 +13,8 @@ service cloud.firestore {
     // Rules for the users collection
     match /users/{userId} {
       // Allow the owner to manage their root family document
-      // Explicitly allow read, create, and update for robustness
-      allow read, create, update, delete: if isOwner(userId);
+      // Using 'write' as a robust catch-all for create/update/delete
+      allow read, write: if isOwner(userId);
       
       // Rules for learner profiles within a family account
       match /learnerProfiles/{learnerProfileId} {
