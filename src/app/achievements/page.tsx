@@ -1,14 +1,75 @@
+
 "use client"
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigation } from '@/components/Navigation';
-import { ACHIEVEMENTS } from '@/app/data/lessons';
+import { ACHIEVEMENTS, VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Star, Lock } from 'lucide-react';
+import { Trophy, Star, Lock, Loader2 } from 'lucide-react';
 import { TranslatedText } from '@/components/TranslatedText';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 export default function AchievementsPage() {
-  const earnedIds = ['first_word'];
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeId = localStorage.getItem('activeProfileId');
+    if (!activeId && !isUserLoading) {
+      router.push('/');
+    } else {
+      setProfileId(activeId);
+    }
+  }, [router, isUserLoading]);
+
+  const profileRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
+  }, [firestore, user, profileId]);
+
+  const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
+
+  const vocabProgressRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return collection(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses');
+  }, [firestore, user, profileId]);
+
+  const { data: vocabProgress, isLoading: isVocabLoading } = useCollection(vocabProgressRef);
+
+  if (isUserLoading || isProfileLoading || isVocabLoading || !profileId || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  const learnedCount = vocabProgress?.length || 0;
+  const stars = activeProfile?.totalStarsEarned || 0;
+
+  // Achievement logic based on real progress
+  const earnedIds: string[] = [];
+  
+  // "First Word" badge
+  if (learnedCount > 0) earnedIds.push('first_word');
+  
+  // "Animal Lover" badge (all animals category)
+  const animalWords = VOCABULARY.filter(w => w.category === 'animals');
+  const learnedAnimals = vocabProgress?.filter(p => animalWords.some(aw => aw.id === p.id)) || [];
+  if (animalWords.length > 0 && learnedAnimals.length >= animalWords.length) {
+    earnedIds.push('animal_lover');
+  }
+
+  // "Gourmet" badge (all food category)
+  const foodWords = VOCABULARY.filter(w => w.category === 'food');
+  const learnedFood = vocabProgress?.filter(p => foodWords.some(fw => fw.id === p.id)) || [];
+  if (foodWords.length > 0 && learnedFood.length >= foodWords.length) {
+    earnedIds.push('foodie');
+  }
 
   return (
     <div className="pb-24 min-h-screen">
@@ -38,10 +99,10 @@ export default function AchievementsPage() {
                   </div>
                   <div className="flex-1">
                     <div className={`font-bold text-lg ${isEarned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      <TranslatedText fr={achievement.title} en="Achievement Title" />
+                      <TranslatedText fr={achievement.title} en={achievement.title} />
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      <TranslatedText fr={achievement.description} en="Earn this medal by learning words." />
+                      <TranslatedText fr={achievement.description} en={achievement.description} />
                     </div>
                   </div>
                   {isEarned && (
@@ -59,21 +120,21 @@ export default function AchievementsPage() {
            </h3>
            <div className="flex justify-around">
              <div>
-               <p className="text-3xl font-bold text-primary">1</p>
+               <p className="text-3xl font-bold text-primary">{earnedIds.length}</p>
                <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Médailles" en="Medals" />
                </div>
              </div>
              <div className="w-px bg-border" />
              <div>
-               <p className="text-3xl font-bold text-primary">12</p>
+               <p className="text-3xl font-bold text-primary">{stars}</p>
                <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Étoiles" en="Stars" />
                </div>
              </div>
              <div className="w-px bg-border" />
              <div>
-               <p className="text-3xl font-bold text-primary">3</p>
+               <p className="text-3xl font-bold text-primary">{learnedCount}</p>
                <div className="text-xs text-muted-foreground uppercase font-bold">
                  <TranslatedText fr="Mots" en="Words" />
                </div>

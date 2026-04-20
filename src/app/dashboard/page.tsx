@@ -11,8 +11,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
@@ -38,7 +38,20 @@ export default function DashboardPage() {
 
   const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  const learnedCount = 3; // Static for demo
+  // Fetch real progress from Firestore
+  const vocabProgressRef = useMemoFirebase(() => {
+    if (!firestore || !user || !profileId) return null;
+    return collection(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses');
+  }, [firestore, user, profileId]);
+
+  const { data: vocabProgress, isLoading: isVocabLoading } = useCollection(vocabProgressRef);
+  
+  const learnedCount = vocabProgress?.length || 0;
+
+  // Find the next words to learn that haven't been mastered yet
+  const nextWords = VOCABULARY.filter(word => 
+    !vocabProgress?.some(p => p.id === word.id)
+  ).slice(0, 2);
 
   const getPlaceholderData = (id: string) => {
     const placeholder = PlaceHolderImages.find(img => img.id === id);
@@ -53,7 +66,7 @@ export default function DashboardPage() {
     router.push('/');
   };
 
-  if (isUserLoading || isProfileLoading || !profileId || !user) {
+  if (isUserLoading || isProfileLoading || isVocabLoading || !profileId || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 text-primary animate-spin" />
@@ -108,7 +121,7 @@ export default function DashboardPage() {
             <TranslatedText fr="Continuer l'Apprentissage" en="Continue Learning" />
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {VOCABULARY.slice(3, 5).map((word) => {
+            {(nextWords.length > 0 ? nextWords : VOCABULARY.slice(0, 2)).map((word) => {
               const imgData = getPlaceholderData(word.imageId);
               return (
                 <Link key={word.id} href={`/learning/${word.id}`}>
