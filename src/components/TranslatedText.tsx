@@ -27,6 +27,17 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
       utterance.rate = 0.8;
+
+      if (lang === 'en-US') {
+        const voices = window.speechSynthesis.getVoices();
+        // Priority list for female English voices
+        const femaleVoice = voices.find(v => 
+          v.lang.startsWith('en') && 
+          (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google US English'))
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+      }
+
       window.speechSynthesis.speak(utterance);
     }
   };

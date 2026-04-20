@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -18,6 +19,18 @@ export function AudioPlayer({ text }: AudioPlayerProps) {
       utterance.lang = 'fr-FR';
       utterance.rate = 0.8;
       utterance.onend = () => setIsPlaying(false);
+
+      // Although this is French text player, we keep logic consistent
+      // in case of English fallback or multilingual text
+      if (utterance.lang.startsWith('en')) {
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => 
+          v.lang.startsWith('en') && 
+          (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha'))
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+      }
+
       window.speechSynthesis.speak(utterance);
     }
   };
