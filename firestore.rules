@@ -1,5 +1,5 @@
 
-// LAST UPDATED: 2026-04-20T05:25:00Z - FORCING RE-DEPLOYMENT TO FIX CONSOLE SYNC
+// LAST UPDATED: 2026-04-20T05:30:00Z - FORCING RE-DEPLOYMENT TO FIX CONSOLE SYNC
 // If you still see permission errors, COPY THIS ENTIRE FILE into the Rules tab in the Firebase Console.
 rules_version = '2';
 service cloud.firestore {

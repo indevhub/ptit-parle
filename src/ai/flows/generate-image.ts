@@ -25,11 +25,17 @@ export const generateWordImageFlow = ai.defineFlow(
     outputSchema: z.string().optional(),
   },
   async (input) => {
-    // Switching to Imagen 3 (imagen-3.0-generate-001) which is the standard high-quality
-    // text-to-image model for the free tier.
+    /**
+     * Using gemini-2.5-flash-image which is the multimodal generator in the Gemini family.
+     * This model is part of the Gemini free tier quotas.
+     */
     const response = await ai.generate({
-      model: googleAI.model('imagen-3.0-generate-001'),
-      prompt: `A cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
+      model: googleAI.model('gemini-2.5-flash-image'),
+      prompt: `Generate a cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
+      config: {
+        // Critical: Gemini image generation requires TEXT and IMAGE modalities.
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
     });
 
     const media = response.media;
