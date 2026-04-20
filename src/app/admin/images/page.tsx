@@ -7,8 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap, Bug } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -20,6 +18,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { MagicImage } from '@/components/MagicImage';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MAX_MAGIC_ENERGY = 10;
 
@@ -78,18 +78,10 @@ export default function ImageGalleryPage() {
     return collection(firestore, 'users', user.uid, 'customImages');
   }, [firestore, user]);
 
-  const { data: customImages } = useCollection(customImagesRef);
+  const { data: customImages, isLoading: isCollectionLoading } = useCollection(customImagesRef);
 
   const getCustomImage = (wordId: string) => {
     return customImages?.find(img => img.id === wordId)?.url;
-  };
-
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
-      hint: placeholder?.imageHint || id
-    };
   };
 
   const handleGenerate = async (word: any) => {
@@ -274,8 +266,7 @@ export default function ImageGalleryPage() {
         
         <div className="grid grid-cols-1 gap-6">
           {VOCABULARY.map((word) => {
-            const customUrl = getCustomImage(word.id);
-            const imgData = getPlaceholderData(word.imageId);
+            const hasCustom = !!getCustomImage(word.id);
             const isProcessing = processingId === word.id;
             const isDragging = dragOverId === word.id;
 
@@ -293,13 +284,17 @@ export default function ImageGalleryPage() {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="relative h-48 w-full md:w-64 rounded-[2rem] overflow-hidden shadow-inner bg-muted shrink-0">
-                      <Image
-                        src={customUrl || imgData.url}
-                        alt={word.english}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={imgData.hint}
-                      />
+                      {isCollectionLoading ? (
+                        <Skeleton className="w-full h-full animate-pulse" />
+                      ) : (
+                        <MagicImage
+                          wordId={word.id}
+                          alt={word.english}
+                          fill
+                          className="object-cover"
+                        />
+                      )}
+                      
                       {isProcessing && (
                         <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center">
                           <Loader2 className="h-10 w-10 text-white animate-spin" />
@@ -311,7 +306,7 @@ export default function ImageGalleryPage() {
                           <TranslatedText fr="Dépose l'image ici !" en="Drop image here!" inline noAudio />
                         </div>
                       )}
-                      {customUrl && (
+                      {hasCustom && (
                         <div className="absolute top-2 right-2">
                            <Button 
                              size="icon" 

@@ -1,22 +1,25 @@
+
 "use client"
 
 import React from 'react';
 import Image, { ImageProps } from 'next/image';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface MagicImageProps extends Omit<ImageProps, 'src'> {
   wordId: string;
-  defaultImageId: string;
+  defaultImageId?: string;
 }
 
 /**
  * A specialized Image component that checks for user-specific custom images
- * in Firestore before falling back to the default placeholder.
+ * in Firestore. Shows a Skeleton while loading and falls back to a 
+ * generic seed-based placeholder if no custom image exists.
  */
-export function MagicImage({ wordId, defaultImageId, alt, ...props }: MagicImageProps) {
-  const { user } = useUser();
+export function MagicImage({ wordId, defaultImageId, alt, className, ...props }: MagicImageProps) {
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const firestore = useFirestore();
 
   const customImageRef = useMemoFirebase(() => {
@@ -24,27 +27,29 @@ export function MagicImage({ wordId, defaultImageId, alt, ...props }: MagicImage
     return doc(firestore, 'users', user.uid, 'customImages', wordId);
   }, [firestore, user, wordId]);
 
-  const { data: customImage } = useDoc(customImageRef);
+  const { data: customImage, isLoading: isDocLoading } = useDoc(customImageRef);
 
-  const getPlaceholderUrl = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return placeholder?.imageUrl || `https://picsum.photos/seed/${id}/600/600`;
-  };
+  const isLoading = isAuthLoading || isDocLoading;
 
-  const getPlaceholderHint = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return placeholder?.imageHint || id;
-  };
+  if (isLoading) {
+    return (
+      <div className={cn("relative w-full h-full min-h-[100px] overflow-hidden rounded-[inherit]", className)}>
+        <Skeleton className="absolute inset-0 w-full h-full animate-pulse bg-muted" />
+      </div>
+    );
+  }
 
-  const finalSrc = customImage?.url || getPlaceholderUrl(defaultImageId);
-  const finalHint = getPlaceholderHint(defaultImageId);
+  // Use a stable seed based on the wordId for the generic fallback
+  const fallbackUrl = `https://picsum.photos/seed/${wordId || 'default'}/600/600`;
+  const finalSrc = customImage?.url || fallbackUrl;
 
   return (
     <Image
       {...props}
       src={finalSrc}
       alt={alt}
-      data-ai-hint={finalHint}
+      className={cn("transition-opacity duration-500", className)}
+      data-ai-hint={alt}
     />
   );
 }
