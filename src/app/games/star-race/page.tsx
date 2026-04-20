@@ -12,7 +12,6 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useTranslation } from '@/context/TranslationContext';
 
 export default function StarRacePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -21,7 +20,6 @@ export default function StarRacePage() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'ended'>('idle');
   const { toast } = useToast();
-  const { showEnglish } = useTranslation();
 
   const startNewRound = useCallback(() => {
     const shuffled = [...VOCABULARY].sort(() => 0.5 - Math.random());
@@ -59,10 +57,9 @@ export default function StarRacePage() {
     } else {
       toast({
         variant: "destructive",
-        title: showEnglish ? "Oups ! (Oops!)" : "Oups !",
+        title: <TranslatedText fr="Oups !" en="Oops!" inline />,
         duration: 1000,
       });
-      // Small time penalty
       setTimeLeft(prev => Math.max(0, prev - 2));
     }
   };

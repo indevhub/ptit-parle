@@ -41,7 +41,6 @@ export default function HuntrixPage() {
       setPos(prev => ({ ...prev, y: Math.min(90, prev.y + moveSpeed) }));
     }
     
-    // Reset direction to idle after a short delay
     setTimeout(() => setDirection('idle'), 500);
   }, []);
 
@@ -60,12 +59,11 @@ export default function HuntrixPage() {
       };
 
       recognition.onerror = (event: any) => {
-        // Removed console.error to prevent Next.js error overlays for non-fatal errors like 'no-speech'
         if (event.error === 'not-allowed') {
           toast({
             variant: "destructive",
-            title: showEnglish ? "Micro bloqué (Mic blocked)" : "Micro bloqué",
-            description: showEnglish ? "Autorise le micro pour jouer à Huntrix ! (Allow mic to play Huntrix!)" : "Autorise le micro pour jouer à Huntrix !",
+            title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline />,
+            description: <TranslatedText fr="Autorise le micro pour jouer !" en="Allow mic to play!" inline />,
           });
           setIsListening(false);
         }
@@ -73,19 +71,21 @@ export default function HuntrixPage() {
 
       recognition.onend = () => {
         if (isListening) {
-          recognition.start(); 
+          try {
+            recognition.start(); 
+          } catch (e) {}
         }
       };
 
       recognitionRef.current = recognition;
     }
-  }, [handleCommand, isListening, toast, showEnglish]);
+  }, [handleCommand, isListening, toast]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
       toast({ 
-        title: showEnglish ? "Désolé (Sorry)" : "Désolé", 
-        description: showEnglish ? "Ton navigateur ne supporte pas Huntrix. (Your browser doesn't support Huntrix.)" : "Ton navigateur ne supporte pas Huntrix." 
+        title: <TranslatedText fr="Désolé" en="Sorry" inline />, 
+        description: <TranslatedText fr="Ton navigateur ne supporte pas Huntrix." en="Your browser doesn't support Huntrix." inline /> 
       });
       return;
     }
@@ -94,12 +94,16 @@ export default function HuntrixPage() {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-      toast({
-        title: showEnglish ? "Huntrix Activé ! (Huntrix On!)" : "Huntrix Activé !",
-        description: showEnglish ? "Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger ! (Say 'Left', 'Right', 'Up' or 'Down' to move!)" : "Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger !",
-      });
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast({
+          title: <TranslatedText fr="Huntrix Activé !" en="Huntrix On!" inline />,
+          description: <TranslatedText fr="Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' pour bouger !" en="Say 'Left', 'Right', 'Up' or 'Down' to move!" inline />,
+        });
+      } catch (e) {
+        setIsListening(false);
+      }
     }
   };
 
@@ -122,11 +126,7 @@ export default function HuntrixPage() {
         <div className="bg-white/80 backdrop-blur-md px-6 py-2 rounded-full border border-indigo-100 flex items-center gap-3">
           <div className={`h-3 w-3 rounded-full ${isListening ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
           <span className="font-bold text-indigo-600 text-sm">
-            {isListening ? (
-              <TranslatedText fr="Micro ouvert" en="Mic On" inline />
-            ) : (
-              <TranslatedText fr="Micro fermé" en="Mic Off" inline />
-            )}
+            <TranslatedText fr={isListening ? "Micro ouvert" : "Micro fermé"} en={isListening ? "Mic On" : "Mic Off"} inline />
           </span>
         </div>
         <Button onClick={toggleListening} className={`rounded-full h-12 w-12 p-0 shadow-lg ${isListening ? 'bg-destructive' : 'bg-indigo-600'}`}>
@@ -176,7 +176,7 @@ export default function HuntrixPage() {
           >
             <div className={`relative w-24 h-24 ${getSpriteClass()}`}>
               <div 
-                className="w-full h-full bg-[url('https://picsum.photos/seed/huntrix/800/400')] bg-no-repeat bg-[length:800%_400%]"
+                className="w-full h-full bg-[url('/huntrix-sprite.png')] bg-no-repeat bg-[length:800%_400%]"
                 style={{ 
                   imageRendering: 'pixelated',
                   backgroundPosition: direction === 'left' || direction === 'right' ? '0% 0%' : direction === 'up' ? '0% 100%' : '0% 75%'

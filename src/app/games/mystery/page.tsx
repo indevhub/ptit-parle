@@ -12,7 +12,6 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useTranslation } from '@/context/TranslationContext';
 
 export default function MysteryWordsPage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -20,7 +19,6 @@ export default function MysteryWordsPage() {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
   const { toast } = useToast();
-  const { showEnglish } = useTranslation();
 
   const startNewRound = () => {
     const shuffled = [...VOCABULARY].sort(() => 0.5 - Math.random());
@@ -38,8 +36,8 @@ export default function MysteryWordsPage() {
     if (wordId === targetWord?.id) {
       setScore(s => s + 1);
       toast({
-        title: showEnglish ? "Gagné ! (You won!)" : "Gagné !",
-        description: showEnglish ? "C'est le bon mot ! (That's the right word!)" : "C'est le bon mot !",
+        title: <TranslatedText fr="Gagné !" en="You won!" inline />,
+        description: <TranslatedText fr="C'est le bon mot !" en="That's the right word!" inline />,
       });
       if (score >= 4) {
         setGameState('won');
@@ -49,8 +47,8 @@ export default function MysteryWordsPage() {
     } else {
       toast({
         variant: "destructive",
-        title: showEnglish ? "Oups ! (Oops!)" : "Oups !",
-        description: showEnglish ? "Essaie encore ! (Try again!)" : "Essaie encore !",
+        title: <TranslatedText fr="Oups !" en="Oops!" inline />,
+        description: <TranslatedText fr="Essaie encore !" en="Try again!" inline />,
       });
     }
   };

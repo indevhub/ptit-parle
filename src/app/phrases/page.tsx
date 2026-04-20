@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState } from 'react';
@@ -15,14 +16,12 @@ import { EnglishVoiceRecorder } from '@/components/EnglishVoiceRecorder';
 import { useToast } from '@/hooks/use-toast';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { useTranslation } from '@/context/TranslationContext';
 
 export default function PhrasesPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isTranslating, setIsTranslating] = useState(false);
   const { toast } = useToast();
-  const { showEnglish } = useTranslation();
 
   const phrasesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -52,15 +51,14 @@ export default function PhrasesPage() {
       }, { merge: true });
 
       toast({
-        title: showEnglish ? "Phrase ajoutée ! (Phrase added!)" : "Phrase ajoutée !",
-        description: showEnglish ? "Ta nouvelle phrase magique est prête à être apprise. (Your new magic phrase is ready to learn.)" : "Ta nouvelle phrase magique est prête à être apprise.",
+        title: <TranslatedText fr="Phrase ajoutée !" en="Phrase added!" inline />,
+        description: <TranslatedText fr="Ta nouvelle phrase magique est prête." en="Your new magic phrase is ready." inline />,
       });
     } catch (error: any) {
-      console.error('Translation Error:', error);
       toast({
         variant: "destructive",
-        title: showEnglish ? "Erreur de traduction (Translation Error)" : "Erreur de traduction",
-        description: error.message || (showEnglish ? "Désolé, la magie n'a pas fonctionné. (Sorry, the magic didn't work.)" : "Désolé, la magie n'a pas fonctionné."),
+        title: <TranslatedText fr="Erreur de traduction" en="Translation Error" inline />,
+        description: <TranslatedText fr="Désolé, la magie n'a pas fonctionné." en="Sorry, the magic didn't work." inline />,
       });
     } finally {
       setIsTranslating(false);
@@ -134,7 +132,6 @@ export default function PhrasesPage() {
                           fr={phrase.frenchText} 
                           en={phrase.englishText} 
                           className="text-xl font-bold text-primary leading-tight"
-                          enClassName="text-sm italic"
                         />
                       </div>
                     </div>
@@ -175,10 +172,7 @@ export default function PhrasesPage() {
           </div>
         ) : (
           <div className="bg-white/50 p-12 rounded-[2rem] text-center border-2 border-dashed border-muted mt-8">
-             <Languages className="h-12 w-12 text-muted mx-auto mb-4" />
-             <p className="text-muted-foreground font-medium">
-               <TranslatedText fr="Appuie sur le micro pour ajouter ta première phrase !" en="Press the mic to add your first phrase!" />
-             </p>
+             <TranslatedText fr="Appuie sur le micro pour ajouter ta première phrase !" en="Press the mic to add your first phrase!" />
           </div>
         )}
       </main>

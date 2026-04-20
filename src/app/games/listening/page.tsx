@@ -13,7 +13,6 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
-import { useTranslation } from '@/context/TranslationContext';
 
 export default function ListeningGamePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -21,7 +20,6 @@ export default function ListeningGamePage() {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'won'>('playing');
   const { toast } = useToast();
-  const { showEnglish } = useTranslation();
 
   const startNewRound = () => {
     const shuffled = [...VOCABULARY].sort(() => 0.5 - Math.random());
@@ -39,8 +37,8 @@ export default function ListeningGamePage() {
     if (wordId === targetWord?.id) {
       setScore(s => s + 1);
       toast({
-        title: showEnglish ? "Magnifique ! (Magnificent!)" : "Magnifique !",
-        description: showEnglish ? "Tu as trouvé le bon mot ! (You found the right word!)" : "Tu as trouvé le bon mot !",
+        title: <TranslatedText fr="Magnifique !" en="Magnificent!" inline />,
+        description: <TranslatedText fr="Tu as trouvé le bon mot !" en="You found the right word!" inline />,
       });
       if (score >= 4) {
         setGameState('won');
@@ -49,8 +47,8 @@ export default function ListeningGamePage() {
       }
     } else {
       toast({
-        title: showEnglish ? "Oups ! (Oops!)" : "Oups !",
-        description: showEnglish ? "Essaie encore, tu peux le faire ! (Try again, you can do it!)" : "Essaie encore, tu peux le faire !",
+        title: <TranslatedText fr="Oups !" en="Oops!" inline />,
+        description: <TranslatedText fr="Essaie encore, tu peux le faire !" en="Try again, you can do it!" inline />,
         variant: "destructive",
       });
     }
