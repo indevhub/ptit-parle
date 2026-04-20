@@ -67,8 +67,8 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-primary mb-1">
               <TranslatedText 
-                fr={`Salut, ${activeProfile?.name || 'Explorateur'} ! 👋`} 
-                en={`Hi, ${activeProfile?.name || 'Explorer'}! 👋`} 
+                fr={`Salut, ${activeProfile?.name || 'Explorateur'} !`} 
+                en={`Hi, ${activeProfile?.name || 'Explorer'}!`} 
               />
             </h1>
             <div className="text-muted-foreground font-medium">

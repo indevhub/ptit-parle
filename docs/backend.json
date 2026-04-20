@@ -1,6 +1,32 @@
 
 {
   "entities": {
+    "UserAccount": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserAccount",
+      "type": "object",
+      "description": "Represents a family account that manages multiple learner profiles.",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The family account email address."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isAnonymous": {
+          "type": "boolean",
+          "description": "Whether this is a temporary device-only account."
+        }
+      },
+      "required": ["uid", "createdAt", "isAnonymous"]
+    },
     "LearnerProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LearnerProfile",
@@ -177,6 +203,14 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserAccount",
+          "schema": { "$ref": "#/backend/entities/UserAccount" },
+          "description": "Global family account document."
+        }
+      },
       {
         "path": "/users/{userId}/learnerProfiles/{learnerProfileId}",
         "definition": {
