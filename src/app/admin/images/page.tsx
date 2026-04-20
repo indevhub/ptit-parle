@@ -1,10 +1,11 @@
+
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap, Bug, X } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap, Bug } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -31,6 +32,7 @@ export default function ImageGalleryPage() {
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState<number>(0);
   const [magicEnergy, setMagicEnergy] = useState<number>(MAX_MAGIC_ENERGY);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   
   // Debug State
   const [isDebugOpen, setIsDebugOpen] = useState(false);
@@ -167,13 +169,20 @@ export default function ImageGalleryPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && activeWordId && firestore && user) {
+    if (file && activeWordId) {
+      processFile(file, activeWordId);
+    }
+    if (e.target) e.target.value = '';
+  };
+
+  const processFile = (file: File, wordId: string) => {
+    if (firestore && user) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        const docRef = doc(firestore, 'users', user.uid, 'customImages', activeWordId);
+        const docRef = doc(firestore, 'users', user.uid, 'customImages', wordId);
         setDocumentNonBlocking(docRef, {
-          id: activeWordId,
+          id: wordId,
           url: base64String,
           updatedAt: new Date().toISOString()
         }, { merge: true });
@@ -184,7 +193,30 @@ export default function ImageGalleryPage() {
       };
       reader.readAsDataURL(file);
     }
-    if (e.target) e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    setDragOverId(id);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    setDragOverId(null);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processFile(file, id);
+    } else if (file) {
+      toast({
+        variant: "destructive",
+        title: <TranslatedText fr="Oups !" en="Oops!" inline noAudio />,
+        description: <TranslatedText fr="Merci de déposer uniquement des images." en="Please drop images only." inline noAudio />,
+      });
+    }
   };
 
   const handleDeleteCustom = (wordId: string) => {
@@ -245,9 +277,19 @@ export default function ImageGalleryPage() {
             const customUrl = getCustomImage(word.id);
             const imgData = getPlaceholderData(word.imageId);
             const isProcessing = processingId === word.id;
+            const isDragging = dragOverId === word.id;
 
             return (
-              <Card key={word.id} className="rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden">
+              <Card 
+                key={word.id} 
+                className={cn(
+                  "rounded-[2.5rem] border-none shadow-xl bg-white overflow-hidden transition-all duration-300",
+                  isDragging && "ring-4 ring-primary ring-offset-4 scale-[1.02]"
+                )}
+                onDragOver={(e) => handleDragOver(e, word.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, word.id)}
+              >
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="relative h-48 w-full md:w-64 rounded-[2rem] overflow-hidden shadow-inner bg-muted shrink-0">
@@ -261,6 +303,12 @@ export default function ImageGalleryPage() {
                       {isProcessing && (
                         <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center">
                           <Loader2 className="h-10 w-10 text-white animate-spin" />
+                        </div>
+                      )}
+                      {isDragging && (
+                        <div className="absolute inset-0 bg-primary/20 backdrop-blur-md flex flex-col items-center justify-center text-primary font-black animate-pulse p-4 text-center">
+                          <Upload className="h-12 w-12 mb-2" />
+                          <TranslatedText fr="Dépose l'image ici !" en="Drop image here!" inline noAudio />
                         </div>
                       )}
                       {customUrl && (
@@ -304,7 +352,10 @@ export default function ImageGalleryPage() {
                         <Button
                           variant="outline"
                           onClick={() => handleUploadClick(word.id)}
-                          className="rounded-2xl h-14 border-2 border-muted hover:bg-muted font-bold gap-2"
+                          className={cn(
+                            "rounded-2xl h-14 border-2 border-muted hover:bg-muted font-bold gap-2 transition-all",
+                            isDragging && "bg-primary text-white border-primary"
+                          )}
                         >
                           <Upload className="h-5 w-5" />
                           <TranslatedText fr="Télécharger" en="Upload" inline noAudio />

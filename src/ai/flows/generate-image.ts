@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Flow to generate illustrations using Imagen 3 on the Google AI Free Tier.
@@ -22,8 +23,8 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     /**
-     * Using the 'imagen-3' alias which is standard for the Google AI Free Tier.
-     * If this 404s, run the Debug Models tool in the UI to find your region's ID.
+     * Using the 'googleai/imagen-3' alias for maximum compatibility with the Google AI Free Tier.
+     * If this fails with 404, check your available models using the Debug tool in the Admin UI.
      */
     const response = await ai.generate({
       model: 'googleai/imagen-3',
