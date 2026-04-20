@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProfilePickerPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -75,8 +76,6 @@ export default function ProfilePickerPage() {
   };
 
   const handleAuth = () => {
-    const auth = (window as any).firebaseAuth || require('firebase/auth').getAuth();
-
     if (authMode === 'login') {
       initiateEmailSignIn(auth, email, password);
       toast({ title: "Connexion en cours...", description: "Magie en cours..." });
@@ -87,7 +86,6 @@ export default function ProfilePickerPage() {
   };
 
   const handleSignOut = () => {
-    const auth = (window as any).firebaseAuth || require('firebase/auth').getAuth();
     initiateSignOut(auth);
     localStorage.removeItem('activeProfileId');
     toast({ title: "À bientôt !", description: "Déconnexion réussie." });
