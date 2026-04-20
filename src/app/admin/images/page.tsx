@@ -62,17 +62,15 @@ export default function ImageGalleryPage() {
           title: <TranslatedText fr="Magie réussie !" en="Magic success!" inline noAudio />,
           description: <TranslatedText fr="Ton nouveau dessin est prêt !" en="Your new drawing is ready!" inline noAudio />,
         });
-      } else {
-        throw new Error('No image returned');
       }
     } catch (error: any) {
-      const isQuota = error.message?.includes('429') || error.message?.toLowerCase().includes('quota');
+      const errorMsg = error.message || 'Unknown error';
+      console.error('Image Gallery Error:', error);
+      
       toast({
         variant: "destructive",
-        title: <TranslatedText fr="Oups !" en="Oops!" inline noAudio />,
-        description: isQuota 
-          ? <TranslatedText fr="Trop de magie ! Attends une minute." en="Too much magic! Wait a minute." inline noAudio />
-          : <TranslatedText fr="La magie a échoué. Réessaie !" en="Magic failed. Try again!" inline noAudio />,
+        title: <TranslatedText fr="La magie a échoué" en="Magic failed" inline noAudio />,
+        description: errorMsg,
       });
     } finally {
       setProcessingId(null);

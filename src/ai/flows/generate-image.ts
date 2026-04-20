@@ -26,16 +26,26 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     try {
+      // Using Gemini 2.5 Flash Image as requested (free tier multimodal generator)
       const { media } = await ai.generate({
-        // Using Imagen 3 as it is highly compatible and reliable
-        model: googleAI.model('imagen-3'),
+        model: googleAI.model('gemini-2.5-flash-image'),
         prompt: `A cute, colorful, kid-friendly cartoon illustration of "${input.word}" for a children's language learning app. High quality, vibrant colors, clean white background, no text in image.`,
+        config: {
+          // Critical: Gemini 2.5 Flash Image requires both TEXT and IMAGE modalities
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
       });
 
-      return media?.url;
-    } catch (error) {
+      if (!media) {
+        throw new Error('The magic mirror did not return an image. Please check your API quota or safety settings.');
+      }
+
+      return media.url;
+    } catch (error: any) {
       console.error('Genkit Image Generation Error:', error);
-      throw error;
+      // Propagate a meaningful error message to the UI
+      const errorMessage = error.message || 'Unknown magic failure';
+      throw new Error(`Génération échouée: ${errorMessage}`);
     }
   }
 );
