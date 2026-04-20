@@ -1,17 +1,15 @@
-
-// VERSION: 2026-04-20T06:15:00Z - FORCING RE-DEPLOYMENT TO RESOLVE PERMISSION ERRORS
-// IF YOU SEE PERMISSION ERRORS, MANUALLY COPY THIS ENTIRE FILE INTO THE FIREBASE CONSOLE.
+// VERSION: 2026-05-15T12:00:00Z - FORCING RE-DEPLOYMENT
+// PLEASE MANUALLY COPY THIS INTO THE FIREBASE CONSOLE IF YOU SEE PERMISSION ERRORS.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function for general authentication check
+    // Helper function
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // Explicit rules for family accounts and their sub-data
+    // Allow any authenticated user to manage their own family tree and all data within it
     match /users/{userId} {
-      // Allow a family full access to their own account document and all nested data
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       
       match /{allSubcollections=**} {
@@ -19,14 +17,10 @@ service cloud.firestore {
       }
     }
 
-    // Reference data (Lessons, achievements, etc.) is Read-Only for everyone
+    // Global reference data is read-only for all explorers
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if false;
-      match /{allSubcollections=**} {
-        allow read: if true;
-        allow write: if false;
-      }
     }
 
     match /achievements/{id} {

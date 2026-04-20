@@ -1,9 +1,6 @@
-
 'use server';
 /**
- * @fileOverview This file implements a Genkit flow for generating illustrations for vocabulary words.
- *
- * - generateWordImage - A function that handles the image generation process.
+ * @fileOverview Flow to generate illustrations using Imagen 3 on the Google AI Free Tier.
  */
 
 import { ai } from '@/ai/genkit';
@@ -25,9 +22,8 @@ export const generateWordImageFlow = ai.defineFlow(
   },
   async (input) => {
     /**
-     * Using 'googleai/imagen-3' which is the standard alias for the free tier model.
-     * Technical ID: imagen-3.0-generate-001
-     * Reference: https://ai.google.dev/pricing
+     * Using the 'imagen-3' alias which is standard for the Google AI Free Tier.
+     * If this 404s, run the Debug Models tool in the UI to find your region's ID.
      */
     const response = await ai.generate({
       model: 'googleai/imagen-3',
@@ -37,7 +33,7 @@ export const generateWordImageFlow = ai.defineFlow(
     const media = response.media;
 
     if (!media || !media.url) {
-      throw new Error('The magic mirror returned an empty response. This usually happens if the AI artist is resting (quota) or the prompt was blocked by safety filters.');
+      throw new Error('The magic artist returned an empty response. This usually means the prompt was blocked by safety filters or your quota (429) was reached.');
     }
 
     return media.url;
