@@ -1,19 +1,19 @@
-
 "use client"
 
 import Link from 'next/link';
 import { Home, Trophy, Gamepad2, BookOpen, MessageSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export function Navigation() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/dashboard', icon: Home, label: 'Accueil' },
-    { href: '/learning', icon: BookOpen, label: 'Mots' },
-    { href: '/phrases', icon: MessageSquare, label: 'Phrases' },
-    { href: '/games', icon: Gamepad2, label: 'Jeux' },
-    { href: '/achievements', icon: Trophy, label: 'Score' },
+    { href: '/dashboard', icon: Home, label: 'Accueil', enLabel: 'Home' },
+    { href: '/learning', icon: BookOpen, label: 'Mots', enLabel: 'Words' },
+    { href: '/phrases', icon: MessageSquare, label: 'Phrases', enLabel: 'Phrases' },
+    { href: '/games', icon: Gamepad2, label: 'Jeux', enLabel: 'Games' },
+    { href: '/achievements', icon: Trophy, label: 'Score', enLabel: 'Score' },
   ];
 
   return (
@@ -31,7 +31,9 @@ export function Navigation() {
               }`}
             >
               <Icon className="h-5 w-5 md:h-6 md:w-6" />
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-center">
+                <TranslatedText fr={item.label} en={item.enLabel} inline />
+              </span>
             </Link>
           );
         })}

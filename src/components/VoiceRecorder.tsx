@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -140,13 +139,13 @@ export function VoiceRecorder({ targetPhrase, onSuccess }: VoiceRecorderProps) {
         <div className="text-center min-h-[4rem] animate-in zoom-in duration-300 px-6 w-full">
           {isRecording && (
             <div className="text-xl md:text-2xl font-bold text-destructive animate-pulse uppercase tracking-widest bg-destructive/10 py-3 rounded-2xl">
-              On t'écoute...
+              <TranslatedText fr="On t'écoute..." en="Listening..." inline />
             </div>
           )}
           {isProcessing && (
             <div className="text-xl md:text-2xl font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin" />
-              Analyse en cours...
+              <TranslatedText fr="Analyse en cours..." en="Analyzing..." inline />
             </div>
           )}
           {feedback && (

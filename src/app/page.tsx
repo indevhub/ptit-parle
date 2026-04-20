@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Globe2, Music } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { TranslatedText } from '@/components/TranslatedText';
 
 export default function HomePage() {
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero')?.imageUrl || 'https://picsum.photos/seed/kids/1200/800';
@@ -29,7 +30,10 @@ export default function HomePage() {
               P&apos;tit Parlé
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-lg mx-auto">
-              L&apos;aventure magique pour apprendre le français en s&apos;amusant !
+              <TranslatedText 
+                fr="L'aventure magique pour apprendre le français en s'amusant !" 
+                en="The magic adventure to learn French while having fun!" 
+              />
             </p>
           </div>
 
@@ -48,7 +52,7 @@ export default function HomePage() {
           <div className="pt-8">
             <Link href="/dashboard">
               <Button size="lg" className="rounded-full px-12 py-8 h-auto text-2xl bg-primary hover:bg-primary/90 shadow-xl child-button">
-                Commencer l&apos;Aventure
+                <TranslatedText fr="Commencer l'Aventure" en="Start the Adventure" />
               </Button>
             </Link>
           </div>
@@ -56,7 +60,10 @@ export default function HomePage() {
       </main>
 
       <footer className="p-8 text-center text-muted-foreground text-sm font-medium">
-        © 2024 P&apos;tit Parlé - Créé avec amour pour les petits explorateurs
+        <TranslatedText 
+          fr="© 2024 P'tit Parlé - Créé avec amour pour les petits explorateurs" 
+          en="© 2024 P'tit Parlé - Created with love for little explorers" 
+        />
       </footer>
     </div>
   );
