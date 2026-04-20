@@ -8,13 +8,14 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail, LogIn, Chrome, LogOut } from 'lucide-react';
+import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail, LogIn, Chrome, LogOut, ImageIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function RootEntryPage() {
   const { user, isUserLoading } = useUser();
@@ -186,10 +187,18 @@ export default function RootEntryPage() {
           <Mail className="h-3 w-3" />
           {user.email}
         </div>
-        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive font-bold gap-2">
-          <LogOut className="h-4 w-4" />
-          <TranslatedText fr="Quitter" en="Logout" inline noAudio />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/images">
+            <Button variant="outline" size="sm" className="rounded-full gap-2 font-bold border-2">
+              <ImageIcon className="h-4 w-4" />
+              <TranslatedText fr="Images" en="Images" inline noAudio />
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive font-bold gap-2">
+            <LogOut className="h-4 w-4" />
+            <TranslatedText fr="Quitter" en="Logout" inline noAudio />
+          </Button>
+        </div>
       </div>
 
       <div className="text-center space-y-4">
