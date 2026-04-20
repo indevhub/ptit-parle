@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, Mic, MicOff, Sparkles, Wand2, Volume2, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +24,7 @@ export default function HuntrixPage() {
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const moveSpeed = 15; // Increased speed for better responsiveness
+  const moveSpeed = 15;
 
   const playCommandAudio = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -43,7 +43,6 @@ export default function HuntrixPage() {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
 
     let found = false;
-    // Map commands (French and English) to movements
     if (cmd.includes('left') || cmd.includes('gauche')) {
       setDirection('left');
       setPos(prev => ({ ...prev, x: Math.max(10, prev.x - moveSpeed) }));
@@ -67,7 +66,7 @@ export default function HuntrixPage() {
     feedbackTimeoutRef.current = setTimeout(() => {
       setFeedback(null);
       setDirection('idle');
-    }, 1000); // Shorter feedback time for faster gameplay
+    }, 1000);
   }, []);
 
   useEffect(() => {
@@ -75,12 +74,14 @@ export default function HuntrixPage() {
     
     if (SpeechRecognition && !recognitionRef.current) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      // Using continuous: false and manual restart is often more reliable
+      // across different browsers and prevents the "stopping" issue.
+      recognition.continuous = false; 
       recognition.interimResults = false;
       recognition.lang = 'fr-FR'; 
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.trim();
+        const transcript = event.results[0][0].transcript.trim();
         handleCommand(transcript);
       };
 
@@ -89,15 +90,21 @@ export default function HuntrixPage() {
       };
 
       recognition.onend = () => {
-        if (isListening) {
+        // If we still want to listen, restart it
+        if (isListening && recognitionRef.current) {
           try {
-            recognition.start(); 
-          } catch (e) {}
+            recognitionRef.current.start();
+          } catch (e) {
+            // Error handling for immediate restarts
+          }
         }
       };
 
-      recognition.onsoundstart = () => setIsHearingSound(true);
-      recognition.onsoundend = () => setIsHearingSound(false);
+      // More sensitive activity indicators
+      recognition.onspeechstart = () => setIsHearingSound(true);
+      recognition.onspeechend = () => setIsHearingSound(false);
+      recognition.onaudiostart = () => setIsHearingSound(true);
+      recognition.onaudioend = () => setIsHearingSound(false);
 
       recognition.onerror = (event: any) => {
         if (event.error === 'not-allowed') {
@@ -108,10 +115,17 @@ export default function HuntrixPage() {
             description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline />,
           });
         }
+        // Silence errors to keep the game flow
       };
 
       recognitionRef.current = recognition;
     }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
   }, [handleCommand, isListening, toast]);
 
   const toggleListening = () => {
@@ -124,14 +138,14 @@ export default function HuntrixPage() {
     }
 
     if (isListening) {
-      recognitionRef.current.stop();
       setIsListening(false);
       setIsHearingSound(false);
+      recognitionRef.current.stop();
       setFeedback(null);
     } else {
       try {
-        recognitionRef.current.start();
         setIsListening(true);
+        recognitionRef.current.start();
         toast({
           title: <TranslatedText fr="Huntrix Activé !" en="Huntrix Active!" inline />,
           description: <TranslatedText fr="Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' !" en="Say 'Left', 'Right', 'Up' or 'Down'!" inline />,
@@ -173,7 +187,7 @@ export default function HuntrixPage() {
           <span className="font-black text-indigo-900 uppercase tracking-widest text-xs">
             <TranslatedText 
               fr={isListening ? (isHearingSound ? "J'écoute..." : "Prêt !") : "Micro Coupé"} 
-              en={isListening ? (isHearingSound ? "Hearing you..." : "Ready!") : "Mic Off"} 
+              en={isListening ? (isHearingSound ? "Hearing you..." : "Mic Off") : "Mic Off"} 
               inline 
             />
           </span>
@@ -186,7 +200,7 @@ export default function HuntrixPage() {
             isHearingSound && "ring-4 ring-green-400 ring-offset-2"
           )}
         >
-          {isListening ? <MicOff className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
+          {isListening ? <MicOff className="h-7 w-7 text-white" /> : <Mic className="h-7 w-7 text-white" />}
         </Button>
       </header>
 
@@ -212,7 +226,6 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Quick Corner Feedback Card */}
           {feedback && (
             <div className={cn(
               "absolute top-8 right-8 z-40 p-4 rounded-[2rem] shadow-2xl border-4 border-white animate-in slide-in-from-right-10 duration-300",
@@ -230,7 +243,6 @@ export default function HuntrixPage() {
             </div>
           )}
 
-          {/* Background Decorations */}
           <div className="absolute inset-0 opacity-10 pointer-events-none grid grid-cols-6 grid-rows-6">
              {Array.from({length: 36}).map((_, i) => (
                <div key={i} className="flex items-center justify-center">
@@ -247,7 +259,6 @@ export default function HuntrixPage() {
               transform: 'translate(-50%, -50%)'
             }}
           >
-            {/* Listening Glow Effect */}
             <div className={cn(
               "absolute inset-0 bg-indigo-400/40 rounded-full blur-[40px] transition-all duration-300",
               isHearingSound ? 'opacity-100 scale-150' : 'opacity-0 scale-100'
@@ -262,9 +273,7 @@ export default function HuntrixPage() {
                   backgroundPositionY: direction === 'up' ? '100%' : direction === 'down' ? '75%' : direction === 'idle' ? '75%' : '0%'
                 }}
               >
-                <div className="w-full h-full flex flex-col items-center justify-center text-8xl transition-all duration-500 hover:scale-110">
-                   <span className="sr-only">Character</span>
-                   {/* Fallback Wizard Emoji if image fails */}
+                <div className="w-full h-full flex flex-col items-center justify-center transition-all duration-500 hover:scale-110">
                    <div className="opacity-0 w-0 h-0">🧙‍♂️</div>
                 </div>
               </div>
