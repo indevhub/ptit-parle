@@ -64,6 +64,18 @@
         "lastActiveAt"
       ]
     },
+    "CustomImage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomImage",
+      "type": "object",
+      "description": "A user-generated or uploaded image for a vocabulary word.",
+      "properties": {
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "url", "updatedAt"]
+    },
     "PhraseItem": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PhraseItem",
@@ -127,73 +139,12 @@
         "orderIndex",
         "thumbnailUrl"
       ]
-    },
-    "VocabularyItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "VocabularyItem",
-      "type": "object",
-      "description": "Represents a single French word or phrase with its associated learning materials.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the VocabularyItem entity."
-        },
-        "lessonId": {
-          "type": "string",
-          "description": "Reference to the Lesson this vocabulary item belongs to."
-        },
-        "frenchText": {
-          "type": "string",
-          "description": "The French word or phrase."
-        },
-        "englishTranslation": {
-          "type": "string",
-          "description": "The English translation of the French word or phrase."
-        },
-        "audioUrl": {
-          "type": "string",
-          "description": "URL to the audio recording.",
-          "format": "uri"
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL to a visual aid image.",
-          "format": "uri"
-        },
-        "difficultyLevel": {
-          "type": "string",
-          "description": "Indicator of difficulty."
-        }
-      },
-      "required": [
-        "id",
-        "lessonId",
-        "frenchText",
-        "englishTranslation",
-        "audioUrl",
-        "imageUrl",
-        "difficultyLevel"
-      ]
-    },
-    "LearnerLessonProgress": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LearnerLessonProgress",
-      "type": "object",
-      "description": "Tracks progress in a lesson.",
-      "properties": {
-        "id": { "type": "string" },
-        "learnerId": { "type": "string" },
-        "lessonId": { "type": "string" },
-        "status": { "type": "string" },
-        "starsEarned": { "type": "number" },
-        "lastAccessedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "learnerId", "lessonId", "status", "starsEarned", "lastAccessedAt"]
     }
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "google"
     ]
   },
   "firestore": {
@@ -204,6 +155,14 @@
           "entityName": "UserAccount",
           "schema": { "$ref": "#/backend/entities/UserAccount" },
           "description": "Global family account document."
+        }
+      },
+      {
+        "path": "/users/{userId}/customImages/{imageId}",
+        "definition": {
+          "entityName": "CustomImage",
+          "schema": { "$ref": "#/backend/entities/CustomImage" },
+          "description": "Custom illustrations for specific vocabulary words."
         }
       },
       {
