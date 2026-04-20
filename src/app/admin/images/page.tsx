@@ -1,11 +1,10 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect } from 'react';
 import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap } from 'lucide-react';
+import { ChevronLeft, Wand2, Upload, Sparkles, Loader2, Trash2, Timer, Zap, Bug, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -15,10 +14,13 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { doc, collection, deleteDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { generateWordImage } from '@/ai/flows/generate-image';
+import { listAvailableModels } from '@/ai/flows/debug-models';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const MAX_MAGIC_ENERGY = 10; // Estimated hourly burst for free tier
+const MAX_MAGIC_ENERGY = 10;
 
 export default function ImageGalleryPage() {
   const { user } = useUser();
@@ -29,15 +31,18 @@ export default function ImageGalleryPage() {
   const [activeWordId, setActiveWordId] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState<number>(0);
   const [magicEnergy, setMagicEnergy] = useState<number>(MAX_MAGIC_ENERGY);
+  
+  // Debug State
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
+  const [debugModels, setDebugModels] = useState<any[]>([]);
+  const [isDebugLoading, setIsDebugLoading] = useState(false);
 
-  // Energy management
   useEffect(() => {
     const savedEnergy = localStorage.getItem('magic_energy');
     const lastReset = localStorage.getItem('magic_energy_reset');
     const now = Date.now();
 
     if (savedEnergy && lastReset) {
-      // Reset energy every hour
       if (now - parseInt(lastReset) > 3600000) {
         setMagicEnergy(MAX_MAGIC_ENERGY);
         localStorage.setItem('magic_energy', MAX_MAGIC_ENERGY.toString());
@@ -138,6 +143,23 @@ export default function ImageGalleryPage() {
     }
   };
 
+  const handleDebug = async () => {
+    setIsDebugLoading(true);
+    setIsDebugOpen(true);
+    try {
+      const models = await listAvailableModels();
+      setDebugModels(models);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Debug Error",
+        description: err.message,
+      });
+    } finally {
+      setIsDebugLoading(false);
+    }
+  };
+
   const handleUploadClick = (wordId: string) => {
     setActiveWordId(wordId);
     fileInputRef.current?.click();
@@ -190,6 +212,9 @@ export default function ImageGalleryPage() {
                    {magicEnergy}/{MAX_MAGIC_ENERGY} <TranslatedText fr="Énergies" en="Energies" inline noAudio />
                  </span>
                </div>
+               <Button variant="ghost" size="icon" onClick={handleDebug} className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary">
+                 <Bug className="h-4 w-4" />
+               </Button>
             </div>
           </div>
           <div className="w-12 h-12" />
@@ -293,6 +318,56 @@ export default function ImageGalleryPage() {
           })}
         </div>
       </main>
+
+      {/* Debug Dialog */}
+      <Dialog open={isDebugOpen} onOpenChange={setIsDebugOpen}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-primary flex items-center gap-3">
+              <Bug className="h-6 w-6" />
+              Available Models List
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {isDebugLoading ? (
+              <div className="py-20 flex flex-col items-center gap-4">
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                <p className="font-bold text-muted-foreground">Checking magic archives...</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[400px] rounded-2xl border-2 border-muted p-4 bg-muted/30">
+                <div className="space-y-4">
+                  {debugModels.length === 0 ? (
+                    <p className="text-center py-10 text-muted-foreground">No models found for this API key.</p>
+                  ) : (
+                    debugModels.map((m: any, i: number) => (
+                      <div key={i} className="p-4 bg-white rounded-xl shadow-sm border border-border">
+                        <div className="font-black text-primary text-sm mb-1">{m.name}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">{m.displayName}</div>
+                        <div className="flex flex-wrap gap-1">
+                          {m.supportedGenerationMethods?.map((method: string) => (
+                            <span key={method} className="text-[9px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">
+                              {method}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2 text-[9px] text-foreground/60 leading-relaxed">
+                          {m.description}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button onClick={() => setIsDebugOpen(false)} className="rounded-full px-8 font-bold">
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
