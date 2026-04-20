@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions for security rules
     function isSignedIn() {
       return request.auth != null;
     }
@@ -8,27 +9,36 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Rules for the users collection
     match /users/{userId} {
-      // Allow the owner to manage their root family document
-      allow read, write: if isOwner(userId);
+      // Allow the owner to manage their root family document (create, read, update)
+      // We split write into create/update for more granular control
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId);
+      allow list, delete: if false; // Keep listing and deletion restricted for safety
       
+      // Rules for learner profiles within a family account
       match /learnerProfiles/{learnerProfileId} {
         allow read, write: if isOwner(userId);
         
+        // Rules for phrases created by a specific learner
         match /phrases/{phraseId} {
           allow read, write: if isOwner(userId);
         }
         
+        // Rules for tracking lesson progress
         match /lessonProgresses/{lessonId} {
           allow read, write: if isOwner(userId);
         }
         
+        // Rules for tracking vocabulary mastery
         match /vocabularyProgresses/{vocabId} {
           allow read, write: if isOwner(userId);
         }
       }
     }
 
+    // Global lessons are readable by everyone but never writable by users
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if false;
@@ -39,11 +49,13 @@ service cloud.firestore {
       }
     }
 
+    // Achievements reference data
     match /achievements/{id} {
       allow read: if true;
       allow write: if false;
     }
     
+    // Internal admin roles
     match /roles_admin/{id} {
       allow read: if isSignedIn();
       allow write: if false;
