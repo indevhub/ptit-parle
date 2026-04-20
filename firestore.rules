@@ -1,50 +1,35 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions for security rules
+    // Helper function for general authentication check
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // Updated: 2024-05-20
-    // Rules for the users collection
+    // Updated: Explicit rules for account management
     match /users/{userId} {
-      // Explicitly allow the owner to manage their family account document
-      allow get, list, create, update, delete: if isSignedIn() && request.auth.uid == userId;
+      // Allow a user full access to their own data
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
       
-      // Rules for learner profiles within a family account
-      match /learnerProfiles/{learnerProfileId} {
+      // Explicit recursive rules for all subcollections
+      match /{allSubcollections=**} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
-        
-        // Rules for phrases created by a specific learner
-        match /phrases/{phraseId} {
-          allow read, write: if isSignedIn() && request.auth.uid == userId;
-        }
-        
-        // Rules for tracking lesson progress
-        match /lessonProgresses/{lessonId} {
-          allow read, write: if isSignedIn() && request.auth.uid == userId;
-        }
-        
-        // Rules for tracking vocabulary mastery
-        match /vocabularyProgresses/{vocabId} {
-          allow read, write: if isSignedIn() && request.auth.uid == userId;
-        }
       }
     }
 
-    // Global lessons are readable by everyone
+    // Lessons and vocabulary reference data (Read-Only)
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if false;
       
-      match /vocabularyItems/{vocabId} {
+      match /{allSubcollections=**} {
         allow read: if true;
         allow write: if false;
       }
     }
 
-    // Achievements reference data
+    // Achievement reference data (Read-Only)
     match /achievements/{id} {
       allow read: if true;
       allow write: if false;
