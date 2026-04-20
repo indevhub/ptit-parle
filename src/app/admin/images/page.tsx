@@ -370,7 +370,6 @@ export default function ImageGalleryPage() {
         </div>
       </main>
 
-      {/* Debug Dialog */}
       <Dialog open={isDebugOpen} onOpenChange={setIsDebugOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-8">
           <DialogHeader>
