@@ -8,10 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, RotateCcw, PartyPopper } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function MysteryWordsPage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -51,14 +50,6 @@ export default function MysteryWordsPage() {
         description: <TranslatedText fr="Essaie encore !" en="Try again!" inline />,
       });
     }
-  };
-
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/600/600`,
-      hint: placeholder?.imageHint || id
-    };
   };
 
   if (gameState === 'won') {
@@ -109,14 +100,14 @@ export default function MysteryWordsPage() {
 
           {targetWord && (
             <div className="relative aspect-square w-full max-w-sm mx-auto rounded-[3rem] overflow-hidden card-shadow bg-white ring-8 ring-white">
-              <Image
-                src={getPlaceholderData(targetWord.imageId).url}
+              <MagicImage
+                wordId={targetWord.id}
+                defaultImageId={targetWord.imageId}
                 alt="Mystery Image"
                 fill
                 priority
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 400px"
-                data-ai-hint={getPlaceholderData(targetWord.imageId).hint}
               />
             </div>
           )}

@@ -7,14 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, Loader2, Users } from 'lucide-react';
 import { VOCABULARY } from '@/app/data/lessons';
-import Image from 'next/image';
 import Link from 'next/link';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -38,7 +37,6 @@ export default function DashboardPage() {
 
   const { data: activeProfile, isLoading: isProfileLoading } = useDoc(profileRef);
 
-  // Fetch real progress from Firestore
   const vocabProgressRef = useMemoFirebase(() => {
     if (!firestore || !user || !profileId) return null;
     return collection(firestore, 'users', user.uid, 'learnerProfiles', profileId, 'vocabularyProgresses');
@@ -48,18 +46,9 @@ export default function DashboardPage() {
   
   const learnedCount = vocabProgress?.length || 0;
 
-  // Find the next words to learn that haven't been mastered yet
   const nextWords = VOCABULARY.filter(word => 
     !vocabProgress?.some(p => p.id === word.id)
   ).slice(0, 2);
-
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
-      hint: placeholder?.imageHint || id
-    };
-  };
 
   const handleSwitchProfile = () => {
     localStorage.removeItem('activeProfileId');
@@ -122,19 +111,17 @@ export default function DashboardPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(nextWords.length > 0 ? nextWords : VOCABULARY.slice(0, 2)).map((word) => {
-              const imgData = getPlaceholderData(word.imageId);
               return (
                 <Link key={word.id} href={`/learning/${word.id}`}>
                   <Card className="rounded-[2rem] border-none shadow-lg bg-white overflow-hidden child-button cursor-pointer group">
                     <div className="relative h-40 w-full">
-                      <Image
-                        src={imgData.url}
+                      <MagicImage
+                        wordId={word.id}
+                        defaultImageId={word.imageId}
                         alt={word.english}
                         fill
                         priority
-                        sizes="(max-width: 768px) 100vw, 400px"
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        data-ai-hint={imgData.hint}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute bottom-4 left-4">

@@ -7,20 +7,11 @@ import { VOCABULARY } from '@/app/data/lessons';
 import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Search } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Input } from '@/components/ui/input';
 import { TranslatedText } from '@/components/TranslatedText';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function LearningListPage() {
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
-      hint: placeholder?.imageHint || id
-    };
-  };
-
   return (
     <div className="pb-24 min-h-screen">
       <header className="p-10 bg-white card-shadow rounded-b-[3rem]">
@@ -39,17 +30,16 @@ export default function LearningListPage() {
       <main className="max-w-screen-md mx-auto p-6">
         <div className="grid grid-cols-2 gap-4">
           {VOCABULARY.map((word) => {
-            const imgData = getPlaceholderData(word.imageId);
             return (
               <Link key={word.id} href={`/learning/${word.id}`}>
                 <Card className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer">
                   <div className="relative h-32 w-full">
-                    <Image
-                      src={imgData.url}
+                    <MagicImage
+                      wordId={word.id}
+                      defaultImageId={word.imageId}
                       alt={word.english}
                       fill
                       className="object-cover"
-                      data-ai-hint={imgData.hint}
                     />
                   </div>
                   <CardContent className="p-4 text-center">

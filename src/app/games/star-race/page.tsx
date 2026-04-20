@@ -8,10 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Star, Timer, Trophy } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function StarRacePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -62,14 +61,6 @@ export default function StarRacePage() {
       });
       setTimeLeft(prev => Math.max(0, prev - 2));
     }
-  };
-
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/400`,
-      hint: placeholder?.imageHint || id
-    };
   };
 
   if (gameState === 'idle') {
@@ -155,13 +146,13 @@ export default function StarRacePage() {
                 onClick={() => handleSelect(word.id)}
                 className="rounded-[2.5rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer h-44 relative group ring-4 ring-transparent hover:ring-primary/20 transition-all"
               >
-                <Image
-                  src={getPlaceholderData(word.imageId).url}
+                <MagicImage
+                  wordId={word.id}
+                  defaultImageId={word.imageId}
                   alt="Option"
                   fill
                   sizes="(max-width: 768px) 50vw, 400px"
                   className="object-cover group-hover:scale-105 transition-transform"
-                  data-ai-hint={getPlaceholderData(word.imageId).hint}
                 />
               </Card>
             ))}

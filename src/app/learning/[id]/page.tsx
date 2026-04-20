@@ -8,13 +8,12 @@ import { AudioPlayer } from '@/components/AudioPlayer';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { ChevronLeft, Info, Star, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { notFound, useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { updateDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function LessonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -67,16 +66,6 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
-  const getPlaceholderData = (imgId: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === imgId);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${imgId}/600/600`,
-      hint: placeholder?.imageHint || imgId
-    };
-  };
-
-  const imgData = getPlaceholderData(word.imageId);
-
   return (
     <div className="pb-24 min-h-screen bg-[#FDF6F8]">
       <div className="max-w-screen-md mx-auto p-6 flex flex-col h-full">
@@ -94,14 +83,13 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
 
         <main className="flex-1 space-y-8">
           <div className="relative aspect-square w-full rounded-[3.5rem] overflow-hidden shadow-2xl bg-white border-8 border-white">
-            <Image
-              src={imgData.url}
+            <MagicImage
+              wordId={word.id}
+              defaultImageId={word.imageId}
               alt={word.french}
               fill
               priority
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, 600px"
-              data-ai-hint={imgData.hint}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             <div className="absolute bottom-10 left-0 right-0 text-center">

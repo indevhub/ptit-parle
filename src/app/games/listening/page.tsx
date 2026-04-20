@@ -9,10 +9,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, RotateCcw, PartyPopper } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
+import { MagicImage } from '@/components/MagicImage';
 
 export default function ListeningGamePage() {
   const [targetWord, setTargetWord] = useState<VocabularyWord | null>(null);
@@ -52,14 +51,6 @@ export default function ListeningGamePage() {
         variant: "destructive",
       });
     }
-  };
-
-  const getPlaceholderData = (id: string) => {
-    const placeholder = PlaceHolderImages.find(img => img.id === id);
-    return {
-      url: placeholder?.imageUrl || `https://picsum.photos/seed/${id}/400/300`,
-      hint: placeholder?.imageHint || id
-    };
   };
 
   if (gameState === 'won') {
@@ -111,20 +102,19 @@ export default function ListeningGamePage() {
 
           <div className="grid grid-cols-2 gap-4">
             {options.map((word) => {
-              const imgData = getPlaceholderData(word.imageId);
               return (
                 <Card
                   key={word.id}
                   onClick={() => handleSelect(word.id)}
                   className="rounded-[2rem] border-none card-shadow bg-white overflow-hidden child-button cursor-pointer group h-48 relative"
                 >
-                  <Image
-                    src={imgData.url}
+                  <MagicImage
+                    wordId={word.id}
+                    defaultImageId={word.imageId}
                     alt={word.english}
                     fill
                     sizes="(max-width: 768px) 50vw, 400px"
                     className="object-cover group-hover:scale-105 transition-transform"
-                    data-ai-hint={imgData.hint}
                   />
                 </Card>
               );
