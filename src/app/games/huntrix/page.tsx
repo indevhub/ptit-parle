@@ -74,8 +74,6 @@ export default function HuntrixPage() {
     
     if (SpeechRecognition && !recognitionRef.current) {
       const recognition = new SpeechRecognition();
-      // Using continuous: false and manual restart is often more reliable
-      // across different browsers and prevents the "stopping" issue.
       recognition.continuous = false; 
       recognition.interimResults = false;
       recognition.lang = 'fr-FR'; 
@@ -90,17 +88,20 @@ export default function HuntrixPage() {
       };
 
       recognition.onend = () => {
-        // If we still want to listen, restart it
+        // Force restart if we are still in listening mode
         if (isListening && recognitionRef.current) {
           try {
             recognitionRef.current.start();
           } catch (e) {
-            // Error handling for immediate restarts
+            // Silence restart errors
           }
+        } else {
+          setIsListening(false);
+          setIsHearingSound(false);
         }
       };
 
-      // More sensitive activity indicators
+      // Sensitive activity indicators
       recognition.onspeechstart = () => setIsHearingSound(true);
       recognition.onspeechend = () => setIsHearingSound(false);
       recognition.onaudiostart = () => setIsHearingSound(true);
@@ -115,7 +116,6 @@ export default function HuntrixPage() {
             description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline />,
           });
         }
-        // Silence errors to keep the game flow
       };
 
       recognitionRef.current = recognition;
@@ -141,11 +141,10 @@ export default function HuntrixPage() {
       setIsListening(false);
       setIsHearingSound(false);
       recognitionRef.current.stop();
-      setFeedback(null);
     } else {
       try {
-        setIsListening(true);
         recognitionRef.current.start();
+        setIsListening(true);
         toast({
           title: <TranslatedText fr="Huntrix Activé !" en="Huntrix Active!" inline />,
           description: <TranslatedText fr="Dis 'Gauche', 'Droite', 'Haut' ou 'Bas' !" en="Say 'Left', 'Right', 'Up' or 'Down'!" inline />,
@@ -195,12 +194,15 @@ export default function HuntrixPage() {
         <Button 
           onClick={toggleListening} 
           className={cn(
-            "rounded-full h-14 w-14 p-0 shadow-2xl border-4 border-white transition-all",
+            "rounded-full h-16 w-16 p-0 shadow-2xl border-4 border-white transition-all relative overflow-hidden",
             isListening ? 'bg-destructive' : 'bg-indigo-600',
-            isHearingSound && "ring-4 ring-green-400 ring-offset-2"
+            isHearingSound && "ring-8 ring-green-400/50"
           )}
         >
-          {isListening ? <MicOff className="h-7 w-7 text-white" /> : <Mic className="h-7 w-7 text-white" />}
+          {isHearingSound && (
+             <div className="absolute inset-0 bg-green-400/20 animate-ping" />
+          )}
+          {isListening ? <MicOff className="h-8 w-8 text-white relative z-10" /> : <Mic className="h-8 w-8 text-white relative z-10" />}
         </Button>
       </header>
 
@@ -259,9 +261,10 @@ export default function HuntrixPage() {
               transform: 'translate(-50%, -50%)'
             }}
           >
+            {/* Audio Indicator (Sound Aura) */}
             <div className={cn(
-              "absolute inset-0 bg-indigo-400/40 rounded-full blur-[40px] transition-all duration-300",
-              isHearingSound ? 'opacity-100 scale-150' : 'opacity-0 scale-100'
+              "absolute inset-[-40px] bg-indigo-500/30 rounded-full blur-[40px] transition-all duration-300",
+              isHearingSound ? 'opacity-100 scale-125 animate-pulse' : 'opacity-0 scale-100'
             )} />
             
             <div className={`relative w-40 h-40 ${getAnimationClass()}`}>
