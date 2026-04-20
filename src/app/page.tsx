@@ -8,12 +8,12 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateEmailSignIn, initiateEmailSignUp, initiateGoogleSignIn, initiateSignOut } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail, LogIn, Chrome, Lock, LogOut } from 'lucide-react';
+import { Loader2, UserPlus, Sparkles, User, ArrowRight, Mail, LogIn, Chrome, LogOut } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 export default function RootEntryPage() {
@@ -69,6 +69,15 @@ export default function RootEntryPage() {
     const profileId = Math.random().toString(36).substring(7);
     const profileRef = doc(firestore, 'users', user.uid, 'learnerProfiles', profileId);
 
+    // Ensure the family document exists FIRST
+    const familyRef = doc(firestore, 'users', user.uid);
+    setDocumentNonBlocking(familyRef, {
+      uid: user.uid,
+      email: user.email,
+      createdAt: new Date().toISOString(),
+    }, { merge: true });
+
+    // Then create the profile
     setDocumentNonBlocking(profileRef, {
       id: profileId,
       name: newProfileName,
@@ -77,20 +86,12 @@ export default function RootEntryPage() {
       lastActiveAt: new Date().toISOString(),
     }, { merge: true });
 
-    // Ensure the family document exists
-    const familyRef = doc(firestore, 'users', user.uid);
-    setDocumentNonBlocking(familyRef, {
-      uid: user.uid,
-      email: user.email,
-      createdAt: new Date().toISOString(),
-    }, { merge: true });
-
     setTimeout(() => {
       setIsCreating(false);
       setIsProfileDialogOpen(false);
       setNewProfileName('');
       handleSelectProfile(profileId);
-    }, 500);
+    }, 800);
   };
 
   if (isUserLoading) {

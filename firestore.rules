@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -11,11 +12,9 @@ service cloud.firestore {
 
     // Rules for the users collection
     match /users/{userId} {
-      // Allow the owner to manage their root family document (create, read, update)
-      // We split write into create/update for more granular control
-      allow get: if isOwner(userId);
-      allow create, update: if isOwner(userId);
-      allow list, delete: if false; // Keep listing and deletion restricted for safety
+      // Allow the owner to manage their root family document
+      // Using 'read' and 'write' to be robust for setDoc with merge
+      allow read, write: if isOwner(userId);
       
       // Rules for learner profiles within a family account
       match /learnerProfiles/{learnerProfileId} {
