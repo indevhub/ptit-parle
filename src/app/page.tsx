@@ -7,7 +7,7 @@ import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, UserPlus, Sparkles, User, ArrowRight, LogIn, Mail, Lock } from 'lucide-react';
+import { Loader2, UserPlus, Sparkles, User, ArrowRight, LogIn, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TranslatedText } from '@/components/TranslatedText';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -75,8 +75,7 @@ export default function ProfilePickerPage() {
   };
 
   const handleAuth = () => {
-    const authInstance = (window as any).firebaseAuth; // Fallback or direct access if needed, but standard is using useAuth
-    // In our setup, we'll use the initiate helpers
+    // Standard approach using the initiate helpers
     const auth = (window as any).firebaseAuth || require('firebase/auth').getAuth();
 
     if (authMode === 'login') {
@@ -94,7 +93,7 @@ export default function ProfilePickerPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
         <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
         <div className="text-xl font-bold text-primary animate-pulse uppercase tracking-widest">
-           <TranslatedText fr="Chargement Magique..." en="Magic Loading..." inline />
+           <TranslatedText fr="Chargement Magique..." en="Magic Loading..." inline noAudio />
         </div>
       </div>
     );
@@ -110,7 +109,7 @@ export default function ProfilePickerPage() {
             className="rounded-full gap-2 border-primary/20 hover:border-primary text-primary font-bold"
           >
             <LogIn className="h-4 w-4" />
-            <TranslatedText fr="Sync Compte" en="Sync Account" inline />
+            <TranslatedText fr="Sync Compte" en="Sync Account" inline noAudio />
           </Button>
         ) : (
           <div className="bg-primary/10 px-4 py-2 rounded-full text-primary font-bold text-sm flex items-center gap-2">
@@ -128,7 +127,7 @@ export default function ProfilePickerPage() {
           P&apos;tit Parlé
         </h1>
         <p className="text-xl text-muted-foreground font-bold">
-          <TranslatedText fr="Qui va apprendre aujourd'hui ?" en="Who is learning today?" />
+          <TranslatedText fr="Qui va apprendre aujourd'hui ?" en="Who is learning today?" noAudio />
         </p>
       </div>
 
@@ -148,7 +147,7 @@ export default function ProfilePickerPage() {
                   {profile.name}
                 </h3>
                 <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                   <TranslatedText fr={`${profile.totalStarsEarned} étoiles`} en={`${profile.totalStarsEarned} stars`} inline />
+                   <TranslatedText fr={`${profile.totalStarsEarned} étoiles`} en={`${profile.totalStarsEarned} stars`} inline noAudio />
                 </div>
               </div>
               <ArrowRight className="h-6 w-6 text-primary/30 group-hover:text-primary transition-colors" />
@@ -162,7 +161,7 @@ export default function ProfilePickerPage() {
               <CardContent className="p-8 flex items-center justify-center gap-4">
                 <UserPlus className="h-8 w-8 text-primary" />
                 <span className="text-xl font-black text-primary">
-                  <TranslatedText fr="Nouveau Profil" en="New Profile" />
+                  <TranslatedText fr="Nouveau Profil" en="New Profile" noAudio />
                 </span>
               </CardContent>
             </Card>
@@ -170,13 +169,13 @@ export default function ProfilePickerPage() {
           <DialogContent className="rounded-[3rem] p-8 border-none shadow-2xl">
             <DialogHeader>
               <DialogTitle className="text-3xl font-black text-primary text-center">
-                <TranslatedText fr="Créer un Explorateur" en="Create an Explorer" />
+                <TranslatedText fr="Créer un Explorateur" en="Create an Explorer" noAudio />
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 py-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-black uppercase tracking-widest text-muted-foreground ml-2">
-                  <TranslatedText fr="Nom de l'enfant" en="Child's Name" inline />
+                  <TranslatedText fr="Nom de l'enfant" en="Child's Name" inline noAudio />
                 </Label>
                 <Input
                   id="name"
@@ -194,7 +193,7 @@ export default function ProfilePickerPage() {
                 className="w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-black shadow-xl child-button"
               >
                 {isCreating ? <Loader2 className="h-6 w-6 animate-spin" /> : <Sparkles className="h-6 w-6 mr-2" />}
-                <TranslatedText fr="Commencer l'Aventure !" en="Start the Adventure!" />
+                <TranslatedText fr="Commencer l'Aventure !" en="Start the Adventure!" noAudio />
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -208,6 +207,7 @@ export default function ProfilePickerPage() {
               <TranslatedText 
                 fr={authMode === 'login' ? "Compte Famille" : "Créer un Compte"} 
                 en={authMode === 'login' ? "Family Account" : "Create Account"} 
+                noAudio
               />
             </DialogTitle>
           </DialogHeader>
@@ -223,7 +223,7 @@ export default function ProfilePickerPage() {
             </div>
             <div className="space-y-2">
               <Label className="ml-2 font-bold uppercase text-[10px] tracking-widest text-muted-foreground">
-                <TranslatedText fr="Mot de passe" en="Password" inline />
+                <TranslatedText fr="Mot de passe" en="Password" inline noAudio />
               </Label>
               <Input 
                 type="password" 
@@ -239,6 +239,7 @@ export default function ProfilePickerPage() {
                 fr={authMode === 'login' ? "Se connecter" : "S'inscrire"} 
                 en={authMode === 'login' ? "Log In" : "Sign Up"} 
                 inline
+                noAudio
               />
             </Button>
             <Button 
@@ -249,6 +250,7 @@ export default function ProfilePickerPage() {
               <TranslatedText 
                 fr={authMode === 'login' ? "Pas encore de compte ? S'inscrire" : "Déjà un compte ? Se connecter"} 
                 en={authMode === 'login' ? "No account? Sign Up" : "Have an account? Log In"} 
+                noAudio
               />
             </Button>
           </DialogFooter>
@@ -259,6 +261,7 @@ export default function ProfilePickerPage() {
         <TranslatedText 
           fr={user?.isAnonymous ? "Tes données sont sur cet appareil" : "Tes données sont synchronisées dans le cloud"} 
           en={user?.isAnonymous ? "Your data is on this device" : "Your data is synced to the cloud"} 
+          noAudio
         />
       </footer>
     </div>

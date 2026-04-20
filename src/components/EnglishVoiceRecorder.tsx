@@ -1,7 +1,8 @@
+
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, Square } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Mic, Square, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/TranslatedText';
@@ -13,6 +14,7 @@ interface EnglishVoiceRecorderProps {
 export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
   const { toast } = useToast();
 
   const startRecording = () => {
@@ -20,13 +22,13 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
     
     if (!SpeechRecognition) {
        toast({ 
-         title: <TranslatedText fr="Désolé" en="Sorry" inline />, 
-         description: <TranslatedText fr="Ton navigateur ne supporte pas la dictée vocale." en="Your browser doesn't support voice dictation." inline /> 
+         title: <TranslatedText fr="Désolé" en="Sorry" inline noAudio />, 
+         description: <TranslatedText fr="Ton navigateur ne supporte pas la dictée vocale." en="Your browser doesn't support voice dictation." inline noAudio /> 
        });
        return;
     }
 
-    if (isRecording) return;
+    if (isRecordingRef.current) return;
 
     try {
       const recognition = new SpeechRecognition();
@@ -37,6 +39,7 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
 
       recognition.onstart = () => {
         setIsRecording(true);
+        isRecordingRef.current = true;
       };
 
       recognition.onresult = (event: any) => {
@@ -48,23 +51,26 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
 
       recognition.onerror = (event: any) => {
         setIsRecording(false);
+        isRecordingRef.current = false;
         if (event.error === 'not-allowed') {
           toast({
             variant: "destructive",
-            title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline />,
-            description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline />,
+            title: <TranslatedText fr="Micro bloqué" en="Mic blocked" inline noAudio />,
+            description: <TranslatedText fr="Merci d'autoriser l'accès." en="Please allow access." inline noAudio />,
           });
         }
       };
       
       recognition.onend = () => {
         setIsRecording(false);
+        isRecordingRef.current = false;
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (e) {
       setIsRecording(false);
+      isRecordingRef.current = false;
     }
   };
 
@@ -73,6 +79,15 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
       recognitionRef.current.stop();
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -97,9 +112,9 @@ export function EnglishVoiceRecorder({ onFinished }: EnglishVoiceRecorderProps) 
       <div className="text-center">
         <div className="font-black text-accent uppercase tracking-widest text-sm">
           {isRecording ? (
-            <TranslatedText fr="Parle en anglais..." en="Speak in English..." inline />
+            <TranslatedText fr="Parle en anglais..." en="Speak in English..." inline noAudio />
           ) : (
-            <TranslatedText fr="Appuie pour traduire" en="Press to translate" inline />
+            <TranslatedText fr="Appuie pour traduire" en="Press to translate" inline noAudio />
           )}
         </div>
       </div>

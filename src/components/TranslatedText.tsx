@@ -4,7 +4,6 @@
 import { useTranslation } from '@/context/TranslationContext';
 import { cn } from '@/lib/utils';
 import { Volume2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface TranslatedTextProps {
   fr: string;
@@ -12,13 +11,14 @@ interface TranslatedTextProps {
   className?: string;
   enClassName?: string;
   inline?: boolean;
+  noAudio?: boolean;
 }
 
 /**
- * Renders bilingual text with built-in text-to-speech buttons for both languages.
- * English text matches the style and color of French text for high visibility.
+ * Renders bilingual text with built-in text-to-speech triggers for both languages.
+ * Uses a span with role="button" to avoid hydration errors when nested inside other buttons.
  */
-export function TranslatedText({ fr, en, className, enClassName, inline = false }: TranslatedTextProps) {
+export function TranslatedText({ fr, en, className, enClassName, inline = false, noAudio = false }: TranslatedTextProps) {
   const { showEnglish } = useTranslation();
 
   const playAudio = (text: string, lang: 'fr-FR' | 'en-US') => {
@@ -30,7 +30,7 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
 
       if (lang === 'en-US') {
         const voices = window.speechSynthesis.getVoices();
-        // Priority list for female English voices
+        // Priority list for female English voices (Samantha on Mac, Zira on Windows, etc.)
         const femaleVoice = voices.find(v => 
           v.lang.startsWith('en') && 
           (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Google US English'))
@@ -48,21 +48,36 @@ export function TranslatedText({ fr, en, className, enClassName, inline = false 
     enClassName
   );
 
-  const PlayButton = ({ text, lang }: { text: string, lang: 'fr-FR' | 'en-US' }) => (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-5 w-5 rounded-full hover:bg-primary/20 text-inherit p-0 ml-1 shrink-0 inline-flex items-center justify-center align-middle"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        playAudio(text, lang);
-      }}
-      title={`Play ${lang === 'fr-FR' ? 'French' : 'English'}`}
-    >
-      <Volume2 className="h-3 w-3" />
-    </Button>
-  );
+  /**
+   * PlayButton uses a span with role="button" to prevent "button inside button" hydration errors
+   * while maintaining accessibility and magical audio functionality.
+   */
+  const PlayButton = ({ text, lang }: { text: string, lang: 'fr-FR' | 'en-US' }) => {
+    if (noAudio) return null;
+
+    return (
+      <span
+        role="button"
+        tabIndex={0}
+        className="h-6 w-6 rounded-full hover:bg-primary/20 text-inherit p-0 ml-1 shrink-0 inline-flex items-center justify-center align-middle cursor-pointer transition-colors active:scale-90"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          playAudio(text, lang);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            playAudio(text, lang);
+          }
+        }}
+        title={`Play ${lang === 'fr-FR' ? 'French' : 'English'}`}
+      >
+        <Volume2 className="h-4 w-4" />
+      </span>
+    );
+  };
 
   if (inline) {
     return (
